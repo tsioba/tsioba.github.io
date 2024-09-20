@@ -121,3 +121,31 @@ document.getElementById('card2').addEventListener('click', function() {
     behavior: 'smooth' // Αυτό κάνει το scroll να είναι ομαλό
   });
 });
+
+// Άνοιγμα του modal όταν κάνεις κλικ στην κάρτα
+const modal = document.getElementById("videoModal");
+const openModal = document.getElementById("openModal");
+const closeModal = document.getElementsByClassName("close")[0];
+const video = document.getElementById("modalVideo"); // Επιλογή του βίντεο μέσα στο modal
+
+// Άνοιγμα του modal όταν πατήσεις την κάρτα
+openModal.onclick = function() {
+  modal.style.display = "flex";
+}
+
+// Κλείσιμο του modal και παύση του βίντεο όταν πατάς το X
+closeModal.onclick = function() {
+  modal.style.display = "none";
+  video.pause();  // Παύση του βίντεο
+  video.currentTime = 0;  // Επαναφορά του βίντεο στην αρχή
+}
+
+// Κλείσιμο του modal και παύση του βίντεο όταν κάνεις κλικ έξω από το modal
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+    video.pause();  // Παύση του βίντεο
+    video.currentTime = 0;  // Επαναφορά του βίντεο στην αρχή
+  }
+}
+

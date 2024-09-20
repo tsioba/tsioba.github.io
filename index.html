@@ -12,6 +12,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sigmar&display=swap" rel="stylesheet" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-B3LZSYM5HM"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-B3LZSYM5HM');
+  </script>
 </head>
 
 <body>
@@ -92,18 +101,36 @@
       </p>
     </div>
   </a>
-  
-  <a href="http://34.155.107.236:8080/" target="_blank" class="card-link">
+
+  <!-- Modal HTML Section -->
+  <div id="videoModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <div class="video-container">
+        <video controls id="modalVideo">
+          <source src="./PhotokinisiPresentation.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <!-- Κάρτα που ανοίγει το modal -->
+  <div class="card-link" id="openModal">
     <div class="card" data-aos="fade-up">
       <div class="heading-container">
         <h3>Photokinisi</h3>
-        <i class="fab fa-html5 heading-icon flip-icon" style="color: #61dafb"></i> <!-- Εικονίδιο HTML με επιπλέον κλάση -->
+        <i class="fab fa-html5 heading-icon flip-icon" style="color: #61dafb"></i>
       </div>
       <p>
         Discover Photokinisi and their sleek new website. Browse their stunning portfolio and easily connect for your photography needs.
       </p>
     </div>
-  </a>
+  </div>
+
+
+
+
 </section>
 
     

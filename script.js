@@ -122,30 +122,46 @@ document.getElementById('card2').addEventListener('click', function() {
   });
 });
 
-// Άνοιγμα του modal όταν κάνεις κλικ στην κάρτα
+/// Επιλογή στοιχείων
 const modal = document.getElementById("videoModal");
-const openModal = document.getElementById("openModal");
 const closeModal = document.getElementsByClassName("close")[0];
-const video = document.getElementById("modalVideo"); // Επιλογή του βίντεο μέσα στο modal
+const video = document.getElementById("modalVideo");
+const videoSource = document.getElementById("videoSource");
 
-// Άνοιγμα του modal όταν πατήσεις την κάρτα
-openModal.onclick = function() {
+// Ορισμός των πηγών βίντεο για κάθε κάρτα
+const videos = {
+  openModal1: './PhotokinisiPresentation.mp4',
+  openModal2: './EshopPresentation.mp4'
+};
+
+// Άνοιγμα modals για τις κάρτες και ενημέρωση του βίντεο
+document.getElementById("openModal1").onclick = function() {
+  openModalWithVideo("openModal1");
+};
+
+document.getElementById("openModal2").onclick = function() {
+  openModalWithVideo("openModal2");
+};
+
+// Συνάρτηση για άνοιγμα του modal και ανανέωση του βίντεο
+function openModalWithVideo(modalId) {
+  videoSource.src = videos[modalId];
+  video.load(); // Επαναφόρτωση του νέου βίντεο
   modal.style.display = "flex";
 }
 
-// Κλείσιμο του modal και παύση του βίντεο όταν πατάς το X
+// Κλείσιμο του modal και παύση του βίντεο
 closeModal.onclick = function() {
   modal.style.display = "none";
-  video.pause();  // Παύση του βίντεο
-  video.currentTime = 0;  // Επαναφορά του βίντεο στην αρχή
-}
+  video.pause();
+  video.currentTime = 0;
+};
 
-// Κλείσιμο του modal και παύση του βίντεο όταν κάνεις κλικ έξω από το modal
+// Κλείσιμο του modal όταν κάνεις κλικ έξω από αυτό
 window.onclick = function(event) {
   if (event.target == modal) {
     modal.style.display = "none";
-    video.pause();  // Παύση του βίντεο
-    video.currentTime = 0;  // Επαναφορά του βίντεο στην αρχή
+    video.pause();
+    video.currentTime = 0;
   }
-}
-
+};

@@ -115,12 +115,12 @@ cards.forEach(card => {
 });
 
 
-document.getElementById('card2').addEventListener('click', function() {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth' // Αυτό κάνει το scroll να είναι ομαλό
-  });
-});
+// document.getElementById('card2').addEventListener('click', function() {
+//   window.scrollTo({
+//     top: 0,
+//     behavior: 'smooth' // Αυτό κάνει το scroll να είναι ομαλό
+//   });
+// });
 
 /// Επιλογή στοιχείων
 const modal = document.getElementById("videoModal");

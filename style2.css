@@ -523,12 +523,13 @@ img {
   color:#cecece;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   column-gap: 1.2rem;
   margin-bottom: 0.5rem;
 }
-#card2 .heading-container {
-  column-gap: 5.2rem;
-}
+/*#card2 .heading-container {*/
+/*  column-gap: 5.2rem;*/
+/*}*/
 
 h3 {
   display: inline-block;
@@ -880,9 +881,9 @@ footer {
       .card .heading-container{
         column-gap: 5.5rem;
       }
-      #card2 .heading-container {
-        column-gap: 8rem;
-      }
+      /*#card2 .heading-container {*/
+      /*  column-gap: 8rem;*/
+      /*}*/
     
       .social-menu ul {
         gap: 40px; /* Μειώστε το κενό μεταξύ των εικονιδίων */

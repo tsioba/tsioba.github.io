@@ -1,0 +1,1506 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Giannis Portfolio</title>
+
+  <!-- DC runtime (processes x-dc, sc-if, sc-for, {{ }} bindings) -->
+  <script src="./assets/runtime.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>window.addEventListener('load', function(){ emailjs.init('faQJF7KHFbzUcy89A'); });</script>
+
+  <script>
+  // Export fix: in the bundled standalone file, CSS animations created while the
+  // unpacker splash is up can get stuck in a "pending" state (startTime null),
+  // leaving entrance-animated content invisible. Periodically kick them onto the
+  // document timeline. Cheap no-op when nothing is stuck.
+  (function () {
+    function kick() {
+      try {
+        document.getAnimations().forEach(function (a) {
+          if (a.startTime === null && a.playState === 'running') {
+            a.startTime = document.timeline.currentTime;
+          }
+        });
+      } catch (e) {}
+    }
+    setInterval(kick, 300);
+    window.addEventListener('load', kick);
+    document.addEventListener('visibilitychange', kick);
+  })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<x-dc>
+<helmet></helmet>
+
+<div data-app="" data-theme="{{ theme }}" data-palette="{{ palette }}" style="position:relative;min-height:100vh;background:var(--bg);color:var(--text);font-family:'Manrope',system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;transition:background .6s var(--ease);">
+
+
+<!-- ==========================================================
+     BACKGROUND EFFECTS (ambient orbs + particle canvas)
+     ========================================================== -->
+  <div style="position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;">
+    <div style="position:absolute;top:-140px;left:-90px;width:460px;height:460px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--a1) 55%, transparent), transparent 70%);filter:blur(72px);animation:orbA 19s ease-in-out infinite;transition:background .6s var(--ease);"></div>
+    <div style="position:absolute;top:16%;right:-120px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--a3) 45%, transparent), transparent 70%);filter:blur(84px);animation:orbB 24s ease-in-out infinite;transition:background .6s var(--ease);"></div>
+    <div style="position:absolute;bottom:-160px;left:36%;width:440px;height:440px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--a2) 48%, transparent), transparent 70%);filter:blur(78px);animation:orbC 27s ease-in-out infinite;transition:background .6s var(--ease);"></div>
+  </div>
+  <canvas id="bg-particles" style="position:fixed;inset:0;z-index:1;pointer-events:none;"></canvas>
+
+
+
+<!-- ==========================================================
+     TOP BAR: Logo + Theme / Palette toggles
+     ========================================================== -->
+  <a onclick="{{ goHome }}" style="position:fixed;top:14px;left:clamp(14px,4vw,32px);z-index:60;display:flex;align-items:center;justify-content:center;padding:0 18px;height:44px;border-radius:22px;background:var(--glass-strong);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:0 8px 28px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.2);text-decoration:none;cursor:pointer;transition:transform .3s var(--ease),box-shadow .3s var(--ease);" style-hover="transform:scale(1.06);box-shadow:0 16px 40px color-mix(in srgb,var(--a2) 38%,transparent);">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.03em;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">Tsioba</span>
+  </a>
+
+  <div style="position:fixed;top:18px;right:clamp(18px,5vw,40px);z-index:60;display:flex;gap:10px;">
+    <button onclick="{{ cyclePalette }}" aria-label="Change palette" title="Change colours" style="width:42px;height:42px;border-radius:13px;border:1px solid var(--glass-border);background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .35s var(--ease);" style-hover="transform:scale(1.08) rotate(8deg);">
+      <span style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2) 50%,var(--a3));box-shadow:0 0 12px color-mix(in srgb,var(--a2) 60%,transparent);transition:background .5s var(--ease);"></span>
+    </button>
+    <button onclick="{{ toggleTheme }}" aria-label="Toggle theme" style="width:42px;height:42px;border-radius:13px;border:1px solid var(--glass-border);background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .35s var(--ease);" style-hover="transform:scale(1.08) rotate(18deg);">
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ true }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </sc-if>
+      <sc-if value="{{ isLight }}" hint-placeholder-val="{{ false }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.2" y1="4.2" x2="5.6" y2="5.6"></line><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.2" y1="19.8" x2="5.6" y2="18.4"></line><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"></line></svg>
+      </sc-if>
+    </button>
+  </div>
+
+  <main style="position:relative;z-index:2;">
+
+<!-- ==========================================================
+     HOME PAGE
+     Edit: hero title, tagline, philosophy quote, CTA buttons
+     ========================================================== -->
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="animation:pageIn .55s var(--ease) both;">
+        <section onmousemove="{{ heroParallax }}" onmouseleave="{{ heroReset }}" class="hero-section" style="position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;text-align:center;padding:clamp(70px,12vh,130px) clamp(16px,5vw,40px) clamp(100px,12vh,140px);">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:clamp(11px,1.3vw,13px);letter-spacing:0.34em;text-transform:uppercase;color:var(--a3);margin-bottom:clamp(10px,2vh,18px);">Web Developer&nbsp;&middot;&nbsp;Greece</div>
+          <h1 id="hero-name" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(42px,10vw,110px);line-height:0.92;letter-spacing:-0.045em;transition:transform .3s var(--ease);transform-style:preserve-3d;display:flex;flex-direction:column;align-items:center;gap:0.04em;">
+            <span style="font-size:0.4em;font-weight:500;letter-spacing:0.02em;color:var(--muted);">I'm</span>
+            <span style="display:block;padding-bottom:0.12em;background:linear-gradient(110deg,var(--a1),var(--a2) 45%,var(--a3));background-size:220% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:textShift 7s linear infinite;">Giannis</span>
+          </h1>
+          <p style="margin-top:clamp(10px,2.5vw,20px);font-size:clamp(15px,2.5vw,22px);font-weight:300;color:var(--muted);max-width:520px;">Just a web developer &mdash; turning simple lines of code into things people love to use.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:clamp(16px,3vh,28px);">
+            <button onclick="{{ goProjects }}" style="padding:15px 30px;border:none;border-radius:14px;font-family:'Manrope',sans-serif;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));box-shadow:0 12px 34px color-mix(in srgb, var(--a2) 42%, transparent);cursor:pointer;transition:transform .3s var(--ease),box-shadow .3s var(--ease);" style-hover="transform:translateY(-4px);box-shadow:0 20px 48px color-mix(in srgb, var(--a1) 50%, transparent);">View My Work</button>
+            <button onclick="{{ goContact }}" style="padding:15px 30px;border-radius:14px;font-family:'Manrope',sans-serif;font-weight:600;font-size:15px;color:var(--text);background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-border);cursor:pointer;transition:transform .3s var(--ease);" style-hover="transform:translateY(-4px);">Get In Touch</button>
+          </div>
+        </section>
+
+        <section style="padding:clamp(20px,3vh,40px) clamp(16px,5vw,40px) clamp(100px,12vh,140px);display:flex;justify-content:center;">
+          <div style="max-width:880px;width:100%;animation:fadeUp .8s var(--ease) .2s both;">
+            <div style="position:relative;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);border:1px solid var(--glass-border);border-radius:30px;padding:clamp(30px,5vw,60px);box-shadow:0 22px 70px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.18);animation:floaty 8s ease-in-out infinite;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--a3);margin-bottom:20px;">Philosophy</div>
+              <span style="position:absolute;top:18px;right:34px;font-family:'Space Grotesk',sans-serif;font-size:120px;line-height:1;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;opacity:.4;pointer-events:none;">&rdquo;</span>
+              <p style="font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(21px,3vw,33px);line-height:1.45;letter-spacing:-0.01em;">Development is the art of bringing abstract ideas to life &mdash; of creating tangible solutions from simple lines of code. It is a journey where patience, perseverance and curiosity are the guides, and where each bug overcome is a victory over oneself.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+
+<!-- ==========================================================
+     PROJECTS / DEMOS PAGE
+     Edit: project cards, demo iframes, project titles & descriptions
+     ========================================================== -->
+    <sc-if value="{{ isProjects }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:pageIn .55s var(--ease) both;padding:clamp(60px,7vh,80px) clamp(16px,5vw,40px) clamp(100px,12vh,140px);">
+        <div style="text-align:center;max-width:680px;margin:0 auto clamp(22px,4vh,38px);animation:fadeUp .7s var(--ease) .05s both;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--a3);margin-bottom:16px;">Selected Work</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(34px,6vw,60px);letter-spacing:-0.03em;">Things I've built</h2>
+          <p style="margin-top:6px;color:var(--muted);font-size:clamp(13px,1.8vw,16px);">Tap a card to open a live mini-demo of each app.</p>
+        </div>
+        <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:24px;animation:fadeUp .7s var(--ease) .18s both;">
+          <sc-for list="{{ projects }}" as="p" hint-placeholder-count="4">
+            <div onmousemove="{{ tilt }}" onmouseleave="{{ untilt }}" onclick="{{ p.open }}" style="position:relative;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%);border:1px solid var(--glass-border);border-radius:24px;padding:18px;cursor:pointer;overflow:hidden;transform-style:preserve-3d;transition:transform .3s var(--ease),box-shadow .35s var(--ease);box-shadow:0 14px 44px rgba(0,0,0,0.26);" style-hover="box-shadow:0 28px 74px color-mix(in srgb, var(--a2) 32%, transparent);">
+              <div data-shine="" style="position:absolute;inset:0;pointer-events:none;transition:background .25s var(--ease);background:transparent;z-index:3;"></div>
+
+              <div style="position:relative;height:186px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg, color-mix(in srgb, var(--a1) 16%, transparent), color-mix(in srgb, var(--a3) 12%, transparent));border:1px solid var(--glass-border);">
+
+                <sc-if value="{{ p.isEshop }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 13px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+                      <span style="font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text);opacity:.55;">store</span>
+                      <span style="position:relative;width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--a1),var(--a2));display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px color-mix(in srgb,var(--a2) 40%,transparent);">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        <span style="position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:var(--a3);font-size:7px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;animation:pulse 2.2s infinite;">2</span>
+                      </span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;flex:1;">
+                      <div style="border-radius:10px;background:linear-gradient(135deg,rgba(245,158,11,0.18),rgba(239,68,68,0.1));border:1px solid var(--glass-border);padding:7px;display:flex;flex-direction:column;gap:3px;animation:fadeUp .38s var(--ease) .06s both;">
+                        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"></path></svg>
+                        </div>
+                        <span style="font-size:8px;font-weight:700;color:#f59e0b;text-align:center;letter-spacing:0.04em;opacity:.85;">HOODIE</span>
+                        <span style="width:100%;height:3px;border-radius:2px;background:var(--glass-strong);"></span>
+                        <span style="width:55%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a1),var(--a2));"></span>
+                      </div>
+                      <div style="border-radius:10px;background:linear-gradient(135deg,rgba(212,165,116,0.18),rgba(146,64,14,0.1));border:1px solid var(--glass-border);padding:7px;display:flex;flex-direction:column;gap:3px;animation:fadeUp .38s var(--ease) .14s both;">
+                        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#d4a574" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16.5C2 14.5 4 12.5 7.5 12L12 11l3-.5C17.5 10 21 11.5 21 14v.5c0 1.5-1 2-3 2H5c-2.5 0-3-.5-3-1.5z"></path><path d="M2 17.5h20"></path><path d="M7.5 12l.3 4.5"></path><path d="M12 11l.3 5.5"></path></svg>
+                        </div>
+                        <span style="font-size:8px;font-weight:700;color:#d4a574;text-align:center;letter-spacing:0.04em;opacity:.85;">SNEAKERS</span>
+                        <span style="width:100%;height:3px;border-radius:2px;background:var(--glass-strong);"></span>
+                        <span style="width:70%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a2),var(--a3));"></span>
+                      </div>
+                      <div style="border-radius:10px;background:linear-gradient(135deg,rgba(134,239,172,0.18),rgba(22,163,74,0.1));border:1px solid var(--glass-border);padding:7px;display:flex;flex-direction:column;gap:3px;animation:fadeUp .38s var(--ease) .22s both;">
+                        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2a3 3 0 0 1 6 0v3H9V2z"></path><rect x="4" y="5" width="16" height="15" rx="3"></rect><rect x="8" y="11" width="8" height="6" rx="1.5"></rect><path d="M12 2v4"></path></svg>
+                        </div>
+                        <span style="font-size:8px;font-weight:700;color:#86efac;text-align:center;letter-spacing:0.04em;opacity:.85;">BACKPACK</span>
+                        <span style="width:100%;height:3px;border-radius:2px;background:var(--glass-strong);"></span>
+                        <span style="width:45%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a3),var(--a1));"></span>
+                      </div>
+                      <div style="border-radius:10px;background:linear-gradient(135deg,rgba(196,181,253,0.18),rgba(109,40,217,0.1));border:1px solid var(--glass-border);padding:7px;display:flex;flex-direction:column;gap:3px;animation:fadeUp .38s var(--ease) .3s both;">
+                        <div style="flex:1;display:flex;align-items:center;justify-content:center;">
+                          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="6"></circle><path d="M12 10.5v2.5l1.5 1.5"></path><path d="M10 4h4"></path><path d="M10 22h4"></path></svg>
+                        </div>
+                        <span style="font-size:8px;font-weight:700;color:#c4b5fd;text-align:center;letter-spacing:0.04em;opacity:.85;">WATCH</span>
+                        <span style="width:100%;height:3px;border-radius:2px;background:var(--glass-strong);"></span>
+                        <span style="width:62%;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--a1),var(--a3));"></span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ p.isCoffee }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;display:flex;justify-content:center;">
+                    <div style="width:108px;margin-top:18px;border-radius:18px 18px 0 0;background:var(--glass-strong);border:1px solid var(--glass-border);border-bottom:none;padding:8px 7px;display:flex;flex-direction:column;gap:4px;">
+                      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:3px;">
+                        <span style="font-size:7px;font-weight:700;letter-spacing:0.08em;color:var(--a3);text-transform:uppercase;">Menu</span>
+                        <span style="width:18px;height:3px;border-radius:2px;background:var(--glass-border);"></span>
+                      </div>
+                      <div style="padding:4px 6px;border-radius:7px;border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;animation:coffeeHl 8s ease-in-out infinite 0s;">
+                        <span style="font-size:7px;font-weight:600;color:var(--text);">Espresso</span>
+                        <span style="font-size:6.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;">€2.0</span>
+                      </div>
+                      <div style="padding:4px 6px;border-radius:7px;border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;animation:coffeeHl 8s ease-in-out infinite 2s;">
+                        <span style="font-size:7px;font-weight:600;color:var(--text);">Cappuccino</span>
+                        <span style="font-size:6.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;">€3.2</span>
+                      </div>
+                      <div style="padding:4px 6px;border-radius:7px;border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;animation:coffeeHl 8s ease-in-out infinite 4s;">
+                        <span style="font-size:7px;font-weight:600;color:var(--text);">Fredo Esp.</span>
+                        <span style="font-size:6.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;">€3.6</span>
+                      </div>
+                      <div style="padding:4px 6px;border-radius:7px;border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:space-between;animation:coffeeHl 8s ease-in-out infinite 6s;">
+                        <span style="font-size:7px;font-weight:600;color:var(--text);">Mocha</span>
+                        <span style="font-size:6.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;">€4.0</span>
+                      </div>
+                      <div style="height:19px;border-radius:9px;background:linear-gradient(110deg,var(--a1),var(--a2));margin-top:2px;display:flex;align-items:center;justify-content:center;">
+                        <span style="font-size:6.5px;font-weight:700;color:#fff;letter-spacing:0.05em;">ADD TO CART</span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ p.isBoat }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;padding:11px 13px;display:flex;flex-direction:column;gap:6px;overflow:hidden;">
+                    <!-- header -->
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <div style="display:flex;align-items:center;gap:5px;">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--a2)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="22"/><path d="M5 15l7 7 7-7"/><path d="M5 11h14"/></svg>
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--text);font-weight:700;">MARINA</span>
+                      </div>
+                      <span style="display:flex;align-items:center;gap:4px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--a3);display:inline-block;animation:pulse 1.6s infinite;"></span><span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--a3);letter-spacing:0.1em;">LIVE</span></span>
+                    </div>
+                    <!-- vessel selector -->
+                    <div style="background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:6px;padding:3px 8px;display:flex;align-items:center;justify-content:space-between;">
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--muted);letter-spacing:0.08em;">VESSEL</span>
+                      <span style="font-family:'Manrope',sans-serif;font-size:9px;font-weight:700;color:var(--text);">Poseidon III</span>
+                    </div>
+                    <!-- availability grid -->
+                    <div style="display:grid;grid-template-columns:26px 1fr 1fr 1fr 1fr;gap:2px 3px;font-family:'JetBrains Mono',monospace;font-size:6.5px;">
+                      <span></span>
+                      <span style="text-align:center;color:var(--muted);">MON</span>
+                      <span style="text-align:center;color:var(--muted);">TUE</span>
+                      <span style="text-align:center;color:var(--muted);">WED</span>
+                      <span style="text-align:center;color:var(--muted);">THU</span>
+                      <span style="color:var(--muted);">09:00</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;">✓</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(239,68,68,0.13);border:1px solid rgba(239,68,68,0.28);color:#ef4444;">✗</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;">✓</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;animation:pulse 1.9s ease-in-out infinite;">✓</span>
+                      <span style="color:var(--muted);">14:00</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(239,68,68,0.13);border:1px solid rgba(239,68,68,0.28);color:#ef4444;">✗</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;">✓</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(239,68,68,0.13);border:1px solid rgba(239,68,68,0.28);color:#ef4444;">✗</span>
+                      <span style="text-align:center;padding:2px;border-radius:3px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;">✓</span>
+                    </div>
+                    <!-- book now pill -->
+                    <div style="display:flex;justify-content:flex-end;">
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:7px;font-weight:700;letter-spacing:0.1em;padding:3px 10px;border-radius:999px;background:linear-gradient(110deg,var(--a1),var(--a2) 60%,var(--a3));color:#fff;">BOOK NOW</span>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ p.isFinance }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;padding:12px 14px;display:flex;flex-direction:column;gap:7px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <div style="display:flex;gap:4px;">
+                        <span style="font-size:7px;font-weight:700;letter-spacing:0.06em;padding:2px 7px;border-radius:999px;background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;">MONTH</span>
+                        <span style="font-size:7px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--glass-strong);color:var(--muted);border:1px solid var(--glass-border);">YEAR</span>
+                      </div>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--a3);letter-spacing:0.1em;">FINANCE</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+                      <div style="border-radius:7px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.22);padding:4px 5px;">
+                        <div style="font-size:6px;color:var(--muted);margin-bottom:1px;letter-spacing:0.04em;">INCOME</div>
+                        <div style="font-size:9px;font-weight:700;color:#10b981;font-family:'JetBrains Mono',monospace;">€5.9k</div>
+                      </div>
+                      <div style="border-radius:7px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.22);padding:4px 5px;">
+                        <div style="font-size:6px;color:var(--muted);margin-bottom:1px;letter-spacing:0.04em;">EXPENSES</div>
+                        <div style="font-size:9px;font-weight:700;color:#ef4444;font-family:'JetBrains Mono',monospace;">€268</div>
+                      </div>
+                      <div style="border-radius:7px;background:var(--glass-strong);border:1px solid var(--glass-border);padding:4px 5px;">
+                        <div style="font-size:6px;color:var(--muted);margin-bottom:1px;letter-spacing:0.04em;">NET</div>
+                        <div style="font-size:9px;font-weight:700;color:var(--a3);font-family:'JetBrains Mono',monospace;">+€5.6k</div>
+                      </div>
+                    </div>
+                    <div style="flex:1;display:flex;align-items:flex-end;gap:3px;">
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:55%;animation:barBob 2.6s ease-in-out 0s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:8%;animation:barBob 2.6s ease-in-out 0.1s infinite;transform-origin:bottom;"></span>
+                      </div>
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:35%;animation:barBob 2.6s ease-in-out 0.3s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:14%;animation:barBob 2.6s ease-in-out 0.4s infinite;transform-origin:bottom;"></span>
+                      </div>
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:70%;animation:barBob 2.6s ease-in-out 0.6s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:5%;animation:barBob 2.6s ease-in-out 0.7s infinite;transform-origin:bottom;"></span>
+                      </div>
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:88%;animation:barBob 2.6s ease-in-out 0.9s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:16%;animation:barBob 2.6s ease-in-out 1.0s infinite;transform-origin:bottom;"></span>
+                      </div>
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:62%;animation:barBob 2.6s ease-in-out 1.2s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:20%;animation:barBob 2.6s ease-in-out 1.3s infinite;transform-origin:bottom;"></span>
+                      </div>
+                      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;height:100%;">
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,var(--a1),transparent);height:48%;animation:barBob 2.6s ease-in-out 1.5s infinite;transform-origin:bottom;"></span>
+                        <span style="flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444,transparent);height:10%;animation:barBob 2.6s ease-in-out 1.6s infinite;transform-origin:bottom;"></span>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ p.isPhoto }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;padding:12px;display:flex;flex-direction:column;gap:5px;">
+                    <div style="height:18px;border-radius:5px;background:var(--glass-strong);border:1px solid var(--glass-border);display:flex;align-items:center;padding:0 8px;gap:5px;flex:none;">
+                      <span style="width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a3));flex:none;"></span>
+                      <span style="flex:1;"></span>
+                      <span style="width:20px;height:3px;border-radius:2px;background:var(--muted);opacity:.25;"></span>
+                      <span style="width:14px;height:3px;border-radius:2px;background:var(--muted);opacity:.25;"></span>
+                      <span style="width:16px;height:3px;border-radius:2px;background:var(--muted);opacity:.25;"></span>
+                    </div>
+                    <div style="flex:2;border-radius:8px;background:linear-gradient(135deg,color-mix(in srgb,var(--a1) 18%,transparent),color-mix(in srgb,var(--a3) 12%,transparent));border:1px solid var(--glass-border);padding:10px 12px;display:flex;flex-direction:column;gap:5px;justify-content:center;">
+                      <span style="width:65%;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--a1),var(--a2));background-size:200% auto;animation:textShift 5s linear infinite;"></span>
+                      <span style="width:45%;height:3px;border-radius:2px;background:var(--muted);opacity:.3;"></span>
+                      <span style="width:34%;height:12px;border-radius:6px;background:linear-gradient(110deg,var(--a1),var(--a2));margin-top:4px;"></span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;flex:none;">
+                      <span style="height:26px;border-radius:5px;background:var(--glass-strong);border:1px solid var(--glass-border);"></span>
+                      <span style="height:26px;border-radius:5px;background:var(--glass-strong);border:1px solid var(--glass-border);"></span>
+                      <span style="height:26px;border-radius:5px;background:var(--glass-strong);border:1px solid var(--glass-border);"></span>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+
+              <div style="padding:18px 6px 6px;">
+                <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:22px;letter-spacing:-0.01em;">{{ p.title }}</h3>
+                <p style="margin-top:9px;color:var(--muted);font-size:14.5px;line-height:1.55;">{{ p.blurb }}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
+                  <sc-for list="{{ p.tags }}" as="t" hint-placeholder-count="3">
+                    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:999px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--muted);">{{ t }}</span>
+                  </sc-for>
+                </div>
+                <div style="margin-top:18px;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--a3);">Open demo<span>&rarr;</span></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="text-align:center;max-width:680px;margin:96px auto 40px;animation:fadeUp .7s var(--ease) .3s both;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--a3);margin-bottom:16px;">Stack</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(30px,5vw,48px);letter-spacing:-0.03em;">Technologies I work with</h2>
+        </div>
+        <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;animation:fadeUp .7s var(--ease) .42s both;">
+          <sc-for list="{{ techs }}" as="t" hint-placeholder-count="7">
+            <span style="display:flex;align-items:center;gap:10px;padding:14px 22px;border-radius:16px;background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--glass-border);font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(15px,2vw,18px);transition:transform .3s var(--ease),box-shadow .35s var(--ease),border-color .3s var(--ease);box-shadow:0 8px 26px rgba(0,0,0,0.2);" style-hover="transform:translateY(-6px);box-shadow:0 20px 44px color-mix(in srgb, var(--a3) 30%, transparent);border-color:var(--a3);">
+              <span style="width:8px;height:8px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a3));box-shadow:0 0 10px var(--a3);"></span>{{ t }}
+            </span>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+
+<!-- ==========================================================
+     CONTACT FORM PAGE
+     Edit: form fields, availability badge, social links
+     ========================================================== -->
+    <sc-if value="{{ isContact }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:pageIn .55s var(--ease) both;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;padding:40px clamp(16px,5vw,40px) 96px;">
+        <div style="text-align:center;max-width:560px;margin:0 auto 14px;animation:fadeUp .7s var(--ease) .05s both;">
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--glass-border);font-size:12px;font-weight:500;margin-bottom:10px;">
+            <span style="width:7px;height:7px;border-radius:50%;background:var(--a1);box-shadow:0 0 8px var(--a1);animation:pulse 2s infinite;"></span>Available for new projects
+          </div>
+          <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(26px,4vw,44px);letter-spacing:-0.03em;line-height:1.1;white-space:nowrap;">Let's build <span style="background:linear-gradient(110deg,var(--a1),var(--a2) 45%,var(--a3));background-size:220% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:textShift 7s linear infinite;">something</span></h2>
+          <p style="margin-top:7px;color:var(--muted);font-size:clamp(15px,2vw,18px);">Have a project in mind, or just want to say hi? Drop a line.</p>
+        </div>
+
+        <div style="position:relative;max-width:560px;margin:0 auto;width:100%;">
+          <div style="position:absolute;top:-40px;left:-10%;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--a2) 30%, transparent), transparent 70%);filter:blur(70px);pointer-events:none;"></div>
+          <form onsubmit="{{ submit }}" style="position:relative;animation:fadeUp .7s var(--ease) .16s both;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);border:1px solid var(--glass-border);border-radius:24px;padding:clamp(24px,4vw,38px);box-shadow:0 18px 60px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.16);transition:border-color .3s var(--ease);" style-hover="border-color:color-mix(in srgb, var(--a3) 40%, var(--glass-border));">
+            <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Name</label>
+            <input value="{{ form.name }}" oninput="{{ onName }}" placeholder="Your name" style="width:100%;padding:13px 15px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Manrope',sans-serif;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .25s var(--ease),box-shadow .25s var(--ease);" style-focus="border-color:var(--a3);box-shadow:0 0 0 3px color-mix(in srgb, var(--a3) 24%, transparent);">
+            <sc-if value="{{ errors.name }}" hint-placeholder-val="{{ false }}"><div style="margin-top:7px;font-size:12.5px;color:#ff7a90;">{{ errors.name }}</div></sc-if>
+
+            <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;">Email</label>
+            <input value="{{ form.email }}" oninput="{{ onEmail }}" placeholder="you@email.com" style="width:100%;padding:13px 15px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Manrope',sans-serif;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .25s var(--ease),box-shadow .25s var(--ease);" style-focus="border-color:var(--a3);box-shadow:0 0 0 3px color-mix(in srgb, var(--a3) 24%, transparent);">
+            <sc-if value="{{ errors.email }}" hint-placeholder-val="{{ false }}"><div style="margin-top:7px;font-size:12.5px;color:#ff7a90;">{{ errors.email }}</div></sc-if>
+
+            <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;">Message</label>
+            <textarea value="{{ form.message }}" oninput="{{ onMessage }}" rows="4" placeholder="Tell me about it&hellip;" style="width:100%;padding:13px 15px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Manrope',sans-serif;font-size:15px;outline:none;resize:vertical;box-sizing:border-box;transition:border-color .25s var(--ease),box-shadow .25s var(--ease);" style-focus="border-color:var(--a3);box-shadow:0 0 0 3px color-mix(in srgb, var(--a3) 24%, transparent);"></textarea>
+            <sc-if value="{{ errors.message }}" hint-placeholder-val="{{ false }}"><div style="margin-top:7px;font-size:12.5px;color:#ff7a90;">{{ errors.message }}</div></sc-if>
+
+            <button type="submit" style="margin-top:22px;width:100%;padding:15px;border:none;border-radius:14px;font-family:'Manrope',sans-serif;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2) 50%,var(--a3) 120%);background-size:180% auto;box-shadow:0 12px 34px color-mix(in srgb, var(--a2) 40%, transparent);cursor:pointer;transition:transform .3s var(--ease),box-shadow .3s var(--ease),background-position .5s var(--ease);" style-hover="transform:translateY(-3px);box-shadow:0 20px 48px color-mix(in srgb, var(--a1) 48%, transparent);background-position:90% center;">{{ sendBtnLabel }}</button>
+            <sc-if value="{{ formError }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:10px;font-size:13px;color:#ff7a90;text-align:center;">Failed to send. Please try again.</div>
+            </sc-if>
+          </form>
+
+          <div style="display:flex;justify-content:center;gap:16px;margin-top:20px;animation:fadeUp .7s var(--ease) .3s both;">
+            <a href="https://github.com/tsioba" target="_blank" rel="noopener noreferrer" aria-label="GitHub" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-border);color:var(--text);text-decoration:none;transition:transform .3s var(--ease),border-color .3s var(--ease),box-shadow .35s var(--ease);box-shadow:0 8px 22px rgba(0,0,0,0.2);" style-hover="transform:translateY(-4px);border-color:var(--a3);box-shadow:0 16px 36px color-mix(in srgb,var(--a3) 28%,transparent);">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+            </a>
+            <a href="https://www.instagram.com/tsioba_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-border);color:var(--text);text-decoration:none;transition:transform .3s var(--ease),border-color .3s var(--ease),box-shadow .35s var(--ease);box-shadow:0 8px 22px rgba(0,0,0,0.2);" style-hover="transform:translateY(-4px);border-color:var(--a3);box-shadow:0 16px 36px color-mix(in srgb,var(--a3) 28%,transparent);">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            </a>
+            <a href="https://www.linkedin.com/in/giannis-tsioympanoydis/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-border);color:var(--text);text-decoration:none;transition:transform .3s var(--ease),border-color .3s var(--ease),box-shadow .35s var(--ease);box-shadow:0 8px 22px rgba(0,0,0,0.2);" style-hover="transform:translateY(-4px);border-color:var(--a3);box-shadow:0 16px 36px color-mix(in srgb,var(--a3) 28%,transparent);">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+            <a href="https://www.facebook.com/giannis.ts10/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-strong);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--glass-border);color:var(--text);text-decoration:none;transition:transform .3s var(--ease),border-color .3s var(--ease),box-shadow .35s var(--ease);box-shadow:0 8px 22px rgba(0,0,0,0.2);" style-hover="transform:translateY(-4px);border-color:var(--a3);box-shadow:0 16px 36px color-mix(in srgb,var(--a3) 28%,transparent);">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+            </a>
+          </div>
+          <div style="text-align:center;margin-top:14px;color:var(--muted);font-size:13px;">&copy; 2026 Giannis Tsioba &middot; Crafted with code &amp; caffeine.</div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+
+
+
+
+<!-- ==========================================================
+     BOTTOM NAVIGATION BAR (fixed dock)
+     ========================================================== -->
+  <nav class="bottom-nav" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:6px;padding:9px;border-radius:22px;background:var(--glass-strong);-webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);border:1px solid var(--glass-border);box-shadow:0 18px 50px rgba(0,0,0,0.4);animation:dockIn .6s var(--ease) both;">
+    <button onclick="{{ goHome }}" aria-label="Home" title="Home" style="{{ homeStyle }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10.2V20h13v-9.8"></path></svg>
+    </button>
+    <button onclick="{{ goProjects }}" aria-label="Projects" title="Projects" style="{{ projStyle }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"></rect><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"></rect><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"></rect><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"></rect></svg>
+    </button>
+    <button onclick="{{ goContact }}" aria-label="Contact" title="Contact" style="{{ contactStyle }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.4"></rect><path d="m3.5 7.5 8.5 5.5 8.5-5.5"></path></svg>
+    </button>
+  </nav>
+
+<!-- ==========================================================
+     MODALS & OVERLAYS
+     (project detail modal, e-shop modal, booking modal, copied toast)
+     ========================================================== -->
+
+  <sc-if value="{{ activeProject }}" hint-placeholder-val="{{ false }}">
+    <div onclick="{{ closeProject }}" style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,5,12,0.62);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);animation:{{ projOverlayAnim }};">
+      <div onclick="{{ stop }}" data-modal-scroll="" style="max-width:600px;width:100%;max-height:80vh;overflow-y:auto;overscroll-behavior:contain;position:relative;background:var(--glass-strong);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--glass-border);border-radius:26px;padding:clamp(20px,4vw,36px);box-shadow:0 30px 90px rgba(0,0,0,0.5);animation:{{ projModalAnim }};">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:2px;">
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(22px,4vw,32px);letter-spacing:-0.02em;min-width:0;">{{ activeProject.title }}</h3>
+          <button onclick="{{ closeProject }}" aria-label="Close" style="flex:none;margin-top:3px;width:36px;height:36px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;transition:background .2s,color .2s;" style-hover="background:rgba(239,68,68,0.18);color:#ef4444;">&times;</button>
+        </div>
+
+        <div style="margin-top:18px;border-radius:18px;border:1px solid var(--glass-border);background:var(--glass);padding:18px;">
+          <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.22em;color:var(--a3);margin-bottom:16px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--a3);animation:pulse 1.6s infinite;"></span>INTERACTIVE DEMO &mdash; TRY IT</div>
+
+          <sc-if value="{{ isShopOpen }}" hint-placeholder-val="{{ false }}">
+
+            <sc-if value="{{ shopBrowse }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:9px;animation:fadeUp .35s var(--ease) both;">
+                <sc-for list="{{ shopItems }}" as="it" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:13px;padding:9px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);">
+                    <sc-if value="{{ it.isCoffee }}" hint-placeholder-val="{{ true }}">
+                      <span style="width:46px;height:46px;flex:none;border-radius:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, color-mix(in srgb,var(--a1) 26%,transparent), color-mix(in srgb,var(--a3) 18%,transparent));border:1px solid var(--glass-border);color:var(--a3);">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9Z"></path><path d="M17 10.2h2.1a2.3 2.3 0 0 1 0 4.6H17"></path><path d="M7.6 2.6c-.5 1 .5 1.6 0 2.6M11.4 2.6c-.5 1 .5 1.6 0 2.6M15.2 2.6c-.5 1 .5 1.6 0 2.6"></path></svg>
+                      </span>
+                    </sc-if>
+                    <sc-if value="{{ it.isProduct }}" hint-placeholder-val="{{ false }}">
+                      {{ it.thumbEl }}
+                    </sc-if>
+                    <span style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;">
+                      <span style="font-weight:600;font-size:14.5px;letter-spacing:-0.01em;">{{ it.name }}</span>
+                      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">{{ it.priceLabel }}</span>
+                    </span>
+                    <sc-if value="{{ it.isEmpty }}" hint-placeholder-val="{{ true }}">
+                      <button onclick="{{ it.add }}" style="padding:9px 16px;border:none;border-radius:11px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));cursor:pointer;transition:transform .25s var(--ease);" style-hover="transform:translateY(-2px);">Add +</button>
+                    </sc-if>
+                    <sc-if value="{{ it.hasItems }}" hint-placeholder-val="{{ false }}">
+                      <span style="display:flex;align-items:center;gap:9px;">
+                        <button onclick="{{ it.dec }}" aria-label="Remove one" style="width:30px;height:30px;border-radius:9px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .2s;" style-hover="background:var(--glass-strong);">&#8722;</button>
+                        <span style="min-width:16px;text-align:center;font-weight:700;font-size:15px;">{{ it.count }}</span>
+                        <button onclick="{{ it.inc }}" aria-label="Add one" style="width:30px;height:30px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);" style-hover="transform:scale(1.1);">+</button>
+                      </span>
+                    </sc-if>
+                  </div>
+                </sc-for>
+                <button onclick="{{ openCart }}" style="{{ viewCartStyle }}">{{ viewCartLabel }}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shopCartPage }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:13px;animation:slideRight .38s var(--ease) both;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button onclick="{{ goBackToBrowse }}" aria-label="Back" style="width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);" style-hover="transform:translateX(-3px);">&larr;</button>
+                  <h4 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em;">Your cart</h4>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <sc-for list="{{ cartLines }}" as="cl" hint-placeholder-count="2">
+                    <div style="display:flex;align-items:center;gap:12px;padding:9px 11px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);animation:rowIn .3s var(--ease) both;">
+                      <span style="flex:1;font-weight:600;font-size:14px;min-width:0;">{{ cl.name }}</span>
+                      <span style="display:flex;align-items:center;gap:8px;">
+                        <button onclick="{{ cl.dec }}" aria-label="Remove one" style="width:27px;height:27px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">&#8722;</button>
+                        <span style="min-width:14px;text-align:center;font-weight:700;font-size:14px;">{{ cl.count }}</span>
+                        <button onclick="{{ cl.inc }}" aria-label="Add one" style="width:27px;height:27px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
+                      </span>
+                      <span style="min-width:52px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">{{ cl.lineLabel }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;padding:2px 4px;">
+                  <span style="color:var(--muted);font-size:14px;">Total &middot; {{ cartCountLabel }}</span>
+                  <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;">{{ cartTotalLabel }}</span>
+                </div>
+                <button onclick="{{ checkout }}" style="width:100%;padding:13px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2) 50%,var(--a3) 120%);background-size:180% auto;box-shadow:0 12px 28px color-mix(in srgb,var(--a2) 38%,transparent);cursor:pointer;transition:transform .3s var(--ease),background-position .5s var(--ease);" style-hover="transform:translateY(-2px);background-position:90% center;">Checkout &middot; {{ cartTotalLabel }}</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ shopDonePage }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:10px 4px 4px;animation:fadeUp .42s var(--ease) both;">
+                <div style="width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a3));box-shadow:0 0 28px color-mix(in srgb,var(--a3) 42%,transparent);animation:popIn .5s var(--ease) both;">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h4 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.01em;">Order placed!</h4>
+                <p style="color:var(--muted);font-size:14.5px;line-height:1.55;max-width:300px;">{{ doneSummary }} &mdash; confirmed! Thanks for shopping the demo.</p>
+                <button onclick="{{ continueShopping }}" style="width:100%;padding:13px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));cursor:pointer;transition:transform .3s var(--ease);" style-hover="transform:translateY(-2px);">Continue shopping</button>
+              </div>
+            </sc-if>
+
+          </sc-if>
+
+          <sc-if value="{{ isBoatOpen }}" hint-placeholder-val="{{ false }}">
+
+            <sc-if value="{{ boatStep0 }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:9px;animation:fadeUp .35s var(--ease) both;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.22em;color:var(--muted);margin-bottom:2px;">SELECT A VESSEL</div>
+                <sc-for list="{{ boatList }}" as="bt" hint-placeholder-count="4">
+                  <div onclick="{{ bt.pick }}" style="{{ bt.style }}">
+                    <span style="width:36px;height:36px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,color-mix(in srgb,var(--a1) 22%,transparent),color-mix(in srgb,var(--a3) 16%,transparent));border:1px solid var(--glass-border);">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--a3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l2-9h14l2 9H3z"></path><path d="M7 8V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3"></path><line x1="12" y1="4" x2="12" y2="8"></line><path d="M3 17c0 2.2 1.8 4 4 4h10c2.2 0 4-1.8 4-4"></path></svg>
+                    </span>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-weight:600;font-size:14px;letter-spacing:-0.01em;">{{ bt.name }}</div>
+                      <div style="color:var(--muted);font-size:12px;font-family:'JetBrains Mono',monospace;">{{ bt.type }} &middot; {{ bt.cap }}</div>
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--a3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;flex:none;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ boatStep1 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:13px;animation:slideRight .38s var(--ease) both;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button onclick="{{ goBoatStep0 }}" aria-label="Back" style="width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);" style-hover="transform:translateX(-3px);">&larr;</button>
+                  <div>
+                    <div style="font-weight:600;font-size:14px;letter-spacing:-0.01em;">{{ selectedBoatName }}</div>
+                    <div style="color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">{{ selectedBoatType }} &middot; {{ selectedBoatCap }}</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:var(--muted);margin-bottom:8px;">DATE</div>
+                  <div style="border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);padding:12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;">{{ calMonthLabel }}</span>
+                      <div style="display:flex;gap:4px;">
+                        <button onclick="{{ prevCalMonth }}" style="{{ calPrevStyle }}">&lsaquo;</button>
+                        <button onclick="{{ nextCalMonth }}" style="{{ calNextStyle }}">&rsaquo;</button>
+                      </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;">
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Mo</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Tu</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">We</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Th</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Fr</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Sa</span>
+                      <span style="text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:2px 0;">Su</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">
+                      <sc-for list="{{ calDays }}" as="cd" hint-placeholder-count="35">
+                        <button onclick="{{ cd.pick }}" style="{{ cd.style }}">{{ cd.dayLabel }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;color:var(--muted);margin-bottom:8px;">TIME</div>
+                  <div style="position:relative;">
+                    <button onclick="{{ toggleBoatTime }}" style="width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .2s var(--ease);box-sizing:border-box;">
+                      <span>{{ selectedTime }}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <sc-if value="{{ boatTimeOpen }}" hint-placeholder-val="{{ false }}">
+                      <div style="position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;border-radius:12px;background:color-mix(in srgb,var(--bg) 93%,var(--glass-strong));border:1px solid var(--glass-border);box-shadow:0 12px 32px rgba(0,0,0,0.4);overflow:hidden;animation:fadeUp .18s var(--ease) both;">
+                        <sc-for list="{{ boatTimes }}" as="bt" hint-placeholder-count="4">
+                          <div onclick="{{ bt.pick }}" style="{{ bt.dropStyle }}">{{ bt.label }}</div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.16em;color:var(--muted);"><span style="width:6px;height:6px;border-radius:50%;background:var(--a1);animation:pulse 1.4s infinite;"></span>SEATS LEFT</span>
+                  <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;">{{ seats }}</span>
+                </div>
+                <div style="height:9px;border-radius:5px;background:var(--glass);border:1px solid var(--glass-border);overflow:hidden;">
+                  <div style="{{ seatsBarStyle }}"></div>
+                </div>
+                <button onclick="{{ goBoatStep2 }}" style="padding:13px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));cursor:pointer;transition:transform .25s var(--ease);" style-hover="transform:translateY(-2px);">Review Booking &rarr;</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ boatStep2 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:13px;animation:slideRight .38s var(--ease) both;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <button onclick="{{ goBoatStep1 }}" aria-label="Back" style="width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);" style-hover="transform:translateX(-3px);">&larr;</button>
+                  <h4 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.01em;">Your Booking</h4>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="{{ selRow }}"><span style="color:var(--muted);font-size:13px;">Vessel</span><span style="font-weight:600;font-size:13px;">{{ selectedBoatName }}</span></div>
+                  <div style="{{ selRow }}"><span style="color:var(--muted);font-size:13px;">Type</span><span style="font-weight:600;font-size:13px;">{{ selectedBoatType }}</span></div>
+                  <div style="{{ selRow }}"><span style="color:var(--muted);font-size:13px;">Date</span><span style="font-weight:600;font-size:13px;">{{ selectedDateLabel }}</span></div>
+                  <div style="{{ selRow }}"><span style="color:var(--muted);font-size:13px;">Time</span><span style="font-weight:600;font-size:13px;">{{ selectedTime }}</span></div>
+                  <div style="{{ selRow }}"><span style="color:var(--muted);font-size:13px;">Seats left</span><span style="font-weight:600;font-size:13px;">{{ seats }}</span></div>
+                </div>
+                <button onclick="{{ confirmBoat }}" style="padding:13px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2) 50%,var(--a3) 120%);background-size:180% auto;box-shadow:0 12px 28px color-mix(in srgb,var(--a2) 38%,transparent);cursor:pointer;transition:transform .3s var(--ease),background-position .5s var(--ease);" style-hover="transform:translateY(-2px);background-position:90% center;">Confirm Booking</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ boatStep3 }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:10px 4px 4px;animation:fadeUp .42s var(--ease) both;">
+                <div style="width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a3));box-shadow:0 0 28px color-mix(in srgb,var(--a3) 42%,transparent);animation:popIn .5s var(--ease) both;">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <h4 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;letter-spacing:-0.01em;">Booking Confirmed!</h4>
+                <p style="color:var(--muted);font-size:14px;line-height:1.55;max-width:300px;">{{ selectedBoatName }} &mdash; {{ selectedDateLabel }} at {{ selectedTime }}. See you aboard!</p>
+                <button onclick="{{ resetBoat }}" style="width:100%;padding:13px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));cursor:pointer;transition:transform .3s var(--ease);" style-hover="transform:translateY(-2px);">Book another trip</button>
+              </div>
+            </sc-if>
+
+          </sc-if>
+
+          <sc-if value="{{ isPhotoOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:8px;animation:fadeUp .35s var(--ease) both;">
+              <div onclick="{{ landingPickNav }}" style="{{ landingNavStyle }}">
+                <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">Brand</span>
+                <div style="display:flex;gap:12px;">
+                  <span style="font-size:11px;color:var(--muted);">Home</span>
+                  <span style="font-size:11px;color:var(--muted);">About</span>
+                  <span style="font-size:11px;color:var(--muted);">Contact</span>
+                </div>
+              </div>
+              <div onclick="{{ landingPickHero }}" style="{{ landingHeroStyle }}">
+                <div style="font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:0.16em;color:var(--a3);margin-bottom:8px;">HERO SECTION</div>
+                <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;line-height:1.2;letter-spacing:-0.02em;margin-bottom:6px;">Welcome to<br><span style="background:linear-gradient(110deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">Our Company</span></div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Engaging subtitle that connects with visitors immediately.</div>
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;background:linear-gradient(110deg,var(--a1),var(--a2));font-size:11px;font-weight:600;color:#fff;">Get Started &rarr;</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                <div onclick="{{ landingPick1 }}" style="{{ landingCard1Style }}">
+                  <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--a1),var(--a2));margin-bottom:6px;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <div style="font-size:11px;font-weight:600;margin-bottom:2px;">Fast</div>
+                  <div style="font-size:10px;color:var(--muted);line-height:1.4;">Optimised for speed.</div>
+                </div>
+                <div onclick="{{ landingPick2 }}" style="{{ landingCard2Style }}">
+                  <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--a2),var(--a3));margin-bottom:6px;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4l3 3"></path></svg></div>
+                  <div style="font-size:11px;font-weight:600;margin-bottom:2px;">Smart</div>
+                  <div style="font-size:10px;color:var(--muted);line-height:1.4;">Adaptive design.</div>
+                </div>
+                <div onclick="{{ landingPick3 }}" style="{{ landingCard3Style }}">
+                  <div style="width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--a3),var(--a1));margin-bottom:6px;display:flex;align-items:center;justify-content:center;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                  <div style="font-size:11px;font-weight:600;margin-bottom:2px;">Secure</div>
+                  <div style="font-size:10px;color:var(--muted);line-height:1.4;">Built to last.</div>
+                </div>
+              </div>
+              <div style="font-size:10px;color:var(--muted);text-align:center;font-family:'JetBrains Mono',monospace;letter-spacing:0.14em;padding-top:2px;">CLICK ANY SECTION TO INTERACT</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isFinanceOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .35s var(--ease) both;">
+
+              <!-- Period filter + add button -->
+              <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+                <button onclick="{{ setFinPeriodToday }}" style="{{ finPeriodTodayStyle }}">TODAY</button>
+                <button onclick="{{ setFinPeriodWeek }}" style="{{ finPeriodWeekStyle }}">WEEK</button>
+                <button onclick="{{ setFinPeriodMonth }}" style="{{ finPeriodMonthStyle }}">MONTH</button>
+                <button onclick="{{ setFinPeriodYear }}" style="{{ finPeriodYearStyle }}">YEAR</button>
+                <button onclick="{{ openFinTabAdd }}" style="margin-left:auto;padding:5px 13px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;cursor:pointer;font-weight:600;border:1px solid var(--a3);color:var(--a3);background:color-mix(in srgb,var(--a3) 10%,transparent);transition:all .2s;">+ ADD</button>
+              </div>
+
+              <!-- KPI row -->
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;">
+                <div style="border-radius:11px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.22);padding:9px 10px;">
+                  <div style="font-size:8px;font-weight:700;letter-spacing:0.1em;color:var(--muted);margin-bottom:3px;">INCOME</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(12px,2.2vw,16px);color:#10b981;letter-spacing:-0.02em;">{{ finIncomeLbl }}</div>
+                </div>
+                <div style="border-radius:11px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.22);padding:9px 10px;">
+                  <div style="font-size:8px;font-weight:700;letter-spacing:0.1em;color:var(--muted);margin-bottom:3px;">EXPENSES</div>
+                  <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(12px,2.2vw,16px);color:#ef4444;letter-spacing:-0.02em;">{{ finExpensesLbl }}</div>
+                </div>
+                <div style="border-radius:11px;background:var(--glass);border:1px solid var(--glass-border);padding:9px 10px;">
+                  <div style="font-size:8px;font-weight:700;letter-spacing:0.1em;color:var(--muted);margin-bottom:3px;">NET PROFIT</div>
+                  <div style="{{ finNetStyle }}">{{ finNetLbl }}</div>
+                </div>
+              </div>
+
+              <!-- Overview tab -->
+              <sc-if value="{{ finTabOverview }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:9px;">
+
+                  <!-- Bar chart -->
+                  <div style="border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);padding:12px 12px 8px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.18em;color:var(--muted);margin-bottom:8px;">6-MONTH TREND</div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;height:68px;">
+                      <sc-for list="{{ chartMonths }}" as="cm">
+                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;">
+                          <div style="flex:1;width:100%;display:flex;align-items:flex-end;gap:1px;">
+                            <div style="{{ cm.incStyle }}"></div>
+                            <div style="{{ cm.expStyle }}"></div>
+                          </div>
+                          <div style="font-size:7px;color:var(--muted);font-family:'JetBrains Mono',monospace;">{{ cm.label }}</div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:6px;">
+                      <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><span style="width:8px;height:8px;border-radius:2px;background:var(--a1);flex:none;display:inline-block;"></span>Income</span>
+                      <span style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted);"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;flex:none;display:inline-block;"></span>Expenses</span>
+                    </div>
+                  </div>
+
+                  <!-- Donut chart + legend -->
+                  <div style="border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);padding:12px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.18em;color:var(--muted);margin-bottom:8px;">EXPENSE BREAKDOWN</div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <div style="width:60px;height:60px;flex:none;">{{ pieChartEl }}</div>
+                      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+                        <sc-for list="{{ pieLegend }}" as="pl">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+                            <div style="display:flex;align-items:center;gap:5px;">
+                              <span style="{{ pl.dotStyle }}"></span>
+                              <span style="font-size:11px;color:var(--text);">{{ pl.cat }}</span>
+                            </div>
+                            <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);">{{ pl.pct }} · {{ pl.amtLbl }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recent transactions -->
+                  <div style="border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);padding:12px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.18em;color:var(--muted);margin-bottom:8px;">RECENT TRANSACTIONS</div>
+                    <div style="display:flex;flex-direction:column;gap:5px;">
+                      <sc-for list="{{ recentTxs }}" as="tx">
+                        <div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:9px;background:var(--glass-strong);border:1px solid var(--glass-border);">
+                          {{ tx.iconEl }}
+                          <div style="flex:1;min-width:0;">
+                            <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ tx.label }}</div>
+                            <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">{{ tx.cat }} · {{ tx.dateLbl }}</div>
+                          </div>
+                          <span style="{{ tx.amtStyle }}">{{ tx.amtLbl }}</span>
+                          <button onclick="{{ tx.remove }}" aria-label="Remove" style="width:20px;height:20px;border-radius:5px;border:1px solid var(--glass-border);background:var(--glass);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;line-height:1;padding:0;">&times;</button>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+
+                </div>
+              </sc-if>
+
+              <!-- Add transaction tab -->
+              <sc-if value="{{ finTabAdd }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px;animation:slideRight .32s var(--ease) both;">
+
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <button onclick="{{ openFinTabOverview }}" aria-label="Back" style="width:32px;height:32px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:transform .2s var(--ease);" style-hover="transform:translateX(-3px);">&larr;</button>
+                    <h4 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.01em;">Add Transaction</h4>
+                  </div>
+
+                  <!-- Income / Expense toggle -->
+                  <div style="display:flex;border-radius:12px;background:var(--glass-strong);border:1px solid var(--glass-border);padding:3px;gap:3px;">
+                    <button onclick="{{ setFinTypeIncome }}" style="{{ finTypeIncomeStyle }}">Income</button>
+                    <button onclick="{{ setFinTypeExpense }}" style="{{ finTypeExpenseStyle }}">Expense</button>
+                  </div>
+
+                  <!-- Amount -->
+                  <div>
+                    <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Amount (€)</label>
+                    <input value="{{ financeForm.amount }}" oninput="{{ onFinanceAmount }}" type="number" min="0" placeholder="0.00" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:15px;outline:none;box-sizing:border-box;transition:border-color .25s;" style-focus="border-color:var(--a3);box-shadow:0 0 0 3px color-mix(in srgb,var(--a3) 22%,transparent);">
+                  </div>
+
+                  <!-- Description -->
+                  <div>
+                    <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Description</label>
+                    <input value="{{ financeForm.label }}" oninput="{{ onFinanceLabel }}" placeholder="e.g. Client Invoice #002" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;outline:none;box-sizing:border-box;transition:border-color .25s;" style-focus="border-color:var(--a3);box-shadow:0 0 0 3px color-mix(in srgb,var(--a3) 22%,transparent);">
+                  </div>
+
+                  <!-- Category pills -->
+                  <div>
+                    <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Category</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                      <sc-for list="{{ financeCatPills }}" as="fp">
+                        <button onclick="{{ fp.pick }}" style="{{ fp.style }}">{{ fp.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+
+                  <button onclick="{{ addFinanceTx }}" style="padding:11px;border:none;border-radius:12px;font-family:'Manrope',sans-serif;font-weight:700;font-size:14.5px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2) 50%,var(--a3) 120%);background-size:180% auto;cursor:pointer;transition:transform .3s var(--ease),background-position .5s;" style-hover="transform:translateY(-2px);background-position:90% center;">Add Transaction</button>
+
+                  <sc-if value="{{ financeAdded }}" hint-placeholder-val="{{ false }}">
+                    <div style="text-align:center;font-size:11px;color:#10b981;font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;animation:fadeUp .3s var(--ease) both;">&#10003; TRANSACTION ADDED</div>
+                  </sc-if>
+
+                </div>
+              </sc-if>
+
+            </div>
+          </sc-if>
+        </div>
+
+        <p style="margin-top:18px;color:var(--muted);font-size:15px;line-height:1.65;">{{ activeProject.detail }}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;">
+          <sc-for list="{{ activeProject.tags }}" as="t" hint-placeholder-count="3">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 11px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);">{{ t }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}">
+    <div onclick="{{ closeModal }}" style="position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(5,5,12,0.62);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);animation:{{ okOverlayAnim }};">
+      <div onclick="{{ stop }}" style="max-width:420px;width:100%;text-align:center;background:var(--glass-strong);-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);border:1px solid var(--glass-border);border-radius:26px;padding:clamp(28px,5vw,44px);box-shadow:0 30px 90px rgba(0,0,0,0.5);animation:{{ okModalAnim }};">
+        <div style="width:64px;height:64px;margin:0 auto 22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--a1),var(--a3));box-shadow:0 0 30px color-mix(in srgb, var(--a3) 45%, transparent);">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;letter-spacing:-0.02em;">Message sent!</h3>
+        <p style="margin-top:12px;color:var(--muted);font-size:15px;line-height:1.6;">Thanks for reaching out &mdash; I'll get back to you as soon as I can.</p>
+        <button onclick="{{ closeModal }}" style="margin-top:24px;padding:13px 28px;border:none;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:15px;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));cursor:pointer;transition:transform .3s var(--ease);" style-hover="transform:translateY(-3px);">Close</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ copied }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:120;padding:12px 22px;border-radius:14px;background:var(--glass-strong);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid var(--glass-border);color:var(--text);font-size:14px;font-weight:500;box-shadow:0 14px 44px rgba(0,0,0,0.35);animation:fadeUp .3s var(--ease);">{{ copiedMsg }}</div>
+  </sc-if>
+
+</div> <!-- /data-app -->
+</x-dc>
+
+
+<!-- ==========================================================
+     APP LOGIC (JavaScript)
+     Full source also in app.js — edit there and paste back here.
+     ========================================================== -->
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;palette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;aurora&quot;,&quot;ember&quot;,&quot;champagne&quot;,&quot;crimson&quot;],&quot;default&quot;:&quot;aurora&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startPage&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;projects&quot;,&quot;contact&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {
+    theme: this.props.theme || 'dark',
+    palette: this.props.palette || 'aurora',
+    page: this.props.startPage || 'home',
+    activeProject: null,
+    form: { name: '', email: '', message: '' },
+    errors: {},
+    modal: false,
+    sending: false,
+    formError: false,
+    copied: null,
+    cart: {},
+    shopPage: 'browse',
+    projClosing: false,
+    modalClosing: false,
+    seats: 9,
+    booked: false,
+    dateSel: null,
+    calYear: 2026,
+    calMonth: 5,
+    photoSel: 1,
+    boatStep: 0,
+    selectedBoat: null,
+    selectedTime: '09:00',
+    boatTimeOpen: false,
+    financePeriod: 'month',
+    financeTab: 'overview',
+    financeForm: { type: 'income', amount: '', label: '', cat: 'Tech' },
+    financeAdded: false,
+    financeTransactions: [
+      { id:  1, type: 'income',  label: 'New Client Deposit',  cat: 'Freelance',  amount: 500,  date: '2026-06-15' },
+      { id:  2, type: 'income',  label: 'Client Invoice #001', cat: 'Freelance',  amount: 2400, date: '2026-06-14' },
+      { id:  3, type: 'expense', label: 'AWS Hosting',         cat: 'Tech',       amount: 89,   date: '2026-06-13' },
+      { id:  4, type: 'income',  label: 'Consulting Session',  cat: 'Consulting', amount: 750,  date: '2026-06-12' },
+      { id:  5, type: 'expense', label: 'Adobe CC',            cat: 'Software',   amount: 55,   date: '2026-06-11' },
+      { id:  6, type: 'income',  label: 'Project Milestone',   cat: 'Freelance',  amount: 1800, date: '2026-06-08' },
+      { id:  7, type: 'expense', label: 'Office Supplies',     cat: 'Office',     amount: 120,  date: '2026-06-05' },
+      { id:  8, type: 'expense', label: 'GitHub Pro',          cat: 'Tech',       amount: 4,    date: '2026-06-01' },
+      { id:  9, type: 'income',  label: 'SaaS License',        cat: 'Freelance',  amount: 960,  date: '2026-05-28' },
+      { id: 10, type: 'expense', label: 'Domain Renewal',      cat: 'Tech',       amount: 15,   date: '2026-05-20' },
+      { id: 11, type: 'income',  label: 'Training Workshop',   cat: 'Consulting', amount: 1200, date: '2026-05-15' },
+      { id: 12, type: 'expense', label: 'Figma License',       cat: 'Software',   amount: 15,   date: '2026-04-22' },
+      { id: 13, type: 'income',  label: 'App Development',     cat: 'Freelance',  amount: 3200, date: '2026-04-10' },
+      { id: 14, type: 'expense', label: 'Cloud Storage',       cat: 'Tech',       amount: 25,   date: '2026-03-18' },
+      { id: 15, type: 'income',  label: 'Design Contract',     cat: 'Freelance',  amount: 1500, date: '2026-03-05' },
+      { id: 16, type: 'expense', label: 'Marketing Tools',     cat: 'Software',   amount: 89,   date: '2026-02-14' },
+      { id: 17, type: 'income',  label: 'API Integration',     cat: 'Consulting', amount: 2100, date: '2026-02-01' },
+      { id: 18, type: 'expense', label: 'Laptop Repair',       cat: 'Office',     amount: 180,  date: '2026-01-20' },
+      { id: 19, type: 'income',  label: 'Yearly Retainer',     cat: 'Consulting', amount: 4800, date: '2026-01-05' },
+    ],
+  };
+
+  componentDidMount() {
+    this.readAccent();
+    this.initParticles();
+    this._key = (e) => { if (e.key !== 'Escape') return; if (this.state.activeProject) this.closeProject(); else if (this.state.modal) this.closeModal(); };
+    window.addEventListener('keydown', this._key);
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.palette !== this.state.palette) this.readAccent();
+    if (prevState.page !== this.state.page) {
+      const doScroll = () => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        try { document.querySelector('[data-app]').scrollTop = 0; } catch (_) {}
+        try { document.querySelector('x-dc').scrollTop = 0; } catch (_) {}
+      };
+      doScroll();
+      requestAnimationFrame(() => { requestAnimationFrame(doScroll); });
+      setTimeout(doScroll, 100);
+    }
+  }
+  componentWillUnmount() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    if (this._resize) window.removeEventListener('resize', this._resize);
+    if (this._key) window.removeEventListener('keydown', this._key);
+    clearTimeout(this._ct);
+    clearTimeout(this._pc);
+    clearTimeout(this._mc);
+    clearTimeout(this._fat);
+    clearTimeout(this._fet);
+    clearInterval(this._boatInt);
+  }
+
+  hexToRgb(h) {
+    if (!h) return null;
+    h = h.trim().replace('#', '');
+    if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+    if (h.length < 6) return null;
+    const n = parseInt(h.slice(0, 6), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  readAccent() {
+    const root = document.querySelector('[data-app]');
+    if (!root) return;
+    const cs = getComputedStyle(root);
+    this._rgb1 = this.hexToRgb(cs.getPropertyValue('--a1')) || [16, 185, 129];
+    this._rgb3 = this.hexToRgb(cs.getPropertyValue('--a3')) || [34, 211, 238];
+  }
+
+  initParticles() {
+    const canvas = document.getElementById('bg-particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let w = 0, h = 0;
+    const resize = () => {
+      w = canvas.width = window.innerWidth * dpr;
+      h = canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    this._resize = resize;
+    const N = window.innerWidth < 700 ? 42 : 84;
+    const pts = Array.from({ length: N }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.35 * dpr, vy: (Math.random() - 0.5) * 0.35 * dpr,
+      r: (Math.random() * 1.6 + 0.6) * dpr,
+    }));
+    const loop = () => {
+      ctx.clearRect(0, 0, w, h);
+      const light = this.state.theme === 'light';
+      const c1 = this._rgb1 || [16, 185, 129];
+      const c3 = this._rgb3 || [34, 211, 238];
+      for (const p of pts) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > w) p.vx *= -1;
+        if (p.y < 0 || p.y > h) p.vy *= -1;
+      }
+      const max = 140 * dpr;
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const a = pts[i], b = pts[j];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d < max) {
+            const al = (1 - d / max) * (light ? 0.14 : 0.2);
+            ctx.strokeStyle = 'rgba(' + c3[0] + ',' + c3[1] + ',' + c3[2] + ',' + al + ')';
+            ctx.lineWidth = dpr * 0.6;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+      for (const p of pts) {
+        ctx.fillStyle = 'rgba(' + c1[0] + ',' + c1[1] + ',' + c1[2] + ',' + (light ? 0.5 : 0.72) + ')';
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.2832); ctx.fill();
+      }
+      this._raf = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  toggleTheme = () => this.setState((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' }));
+  cyclePalette = () => {
+    const order = ['aurora', 'ember', 'champagne', 'crimson'];
+    this.setState((s) => ({ palette: order[(order.indexOf(s.palette) + 1) % order.length] }));
+  };
+  go = (page) => () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    this.setState({ page });
+  };
+
+  tilt = (e) => {
+    const c = e.currentTarget;
+    const r = c.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    c.style.transform = 'perspective(900px) rotateX(' + ((0.5 - py) * 9).toFixed(2) + 'deg) rotateY(' + ((px - 0.5) * 11).toFixed(2) + 'deg) translateY(-6px)';
+    const sh = c.querySelector('[data-shine]');
+    if (sh) sh.style.background = 'radial-gradient(circle at ' + (px * 100).toFixed(1) + '% ' + (py * 100).toFixed(1) + '%, rgba(255,255,255,0.16), transparent 55%)';
+  };
+  untilt = (e) => {
+    const c = e.currentTarget;
+    c.style.transform = 'perspective(900px) rotateX(0) rotateY(0) translateY(0)';
+    const sh = c.querySelector('[data-shine]');
+    if (sh) sh.style.background = 'transparent';
+  };
+
+  heroParallax = (e) => {
+    const el = document.getElementById('hero-name');
+    if (!el) return;
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    el.style.transform = 'perspective(800px) rotateX(' + ((cy - e.clientY) / cy * 5).toFixed(2) + 'deg) rotateY(' + ((e.clientX - cx) / cx * 7).toFixed(2) + 'deg)';
+  };
+  heroReset = () => {
+    const el = document.getElementById('hero-name');
+    if (el) el.style.transform = 'perspective(800px) rotateX(0) rotateY(0)';
+  };
+  toggleBoatTime = () => this.setState((s) => ({ boatTimeOpen: !s.boatTimeOpen }));
+  getBaseSeats(year, month, day, timeStr) {
+    const ti = ['09:00','12:00','15:00','18:00'].indexOf(timeStr);
+    const v = (year % 100) * 7 + (month + 1) * 13 + day * 17 + (ti + 1) * 11;
+    return (v % 13) + 2;
+  }
+  prevCalMonth = () => this.setState((s) => { let m = s.calMonth - 1, y = s.calYear; if (m < 0) { m = 11; y--; } return { calMonth: m, calYear: y }; });
+  nextCalMonth = () => this.setState((s) => { let m = s.calMonth + 1, y = s.calYear; if (m > 11) { m = 0; y++; } return { calMonth: m, calYear: y }; });
+
+  openProject = (p) => {
+    clearInterval(this._boatInt);
+    clearTimeout(this._pc);
+    document.body.style.overflow = 'hidden';
+    const now = new Date(); const ty = now.getFullYear(), tm = now.getMonth(), td = now.getDate();
+    this.setState({ activeProject: p, projClosing: false, cart: {}, shopPage: 'browse', seats: this.getBaseSeats(ty, tm, td, '09:00'), booked: false, dateSel: { year: ty, month: tm, day: td }, calYear: ty, calMonth: tm, photoSel: 1, boatStep: 0, selectedBoat: null, selectedTime: '09:00', boatTimeOpen: false, financeTab: 'overview' });
+  };
+  closeProject = () => {
+    if (this.state.projClosing) return;
+    this.setState({ projClosing: true });
+    clearTimeout(this._pc);
+    this._pc = setTimeout(() => {
+      clearInterval(this._boatInt);
+      document.body.style.overflow = '';
+      this.setState({ activeProject: null, projClosing: false, cart: {}, shopPage: 'browse' });
+    }, 330);
+  };
+  closeModal = () => {
+    if (this.state.modalClosing) return;
+    this.setState({ modalClosing: true });
+    clearTimeout(this._mc);
+    this._mc = setTimeout(() => this.setState({ modal: false, modalClosing: false }), 320);
+  };
+
+  addItem = (id) => () => this.setState((st) => ({ cart: { ...st.cart, [id]: (st.cart[id] || 0) + 1 } }));
+  decItem = (id) => () => this.setState((st) => {
+    const n = (st.cart[id] || 0) - 1;
+    const c = { ...st.cart };
+    if (n <= 0) delete c[id]; else c[id] = n;
+    return { cart: c };
+  });
+  openCart = () => {
+    if (Object.values(this.state.cart).reduce((a, b) => a + b, 0) > 0) this.setState({ shopPage: 'cart' });
+  };
+  goBackToBrowse = () => this.setState({ shopPage: 'browse' });
+  checkout = () => this.setState({ shopPage: 'done' });
+  continueShopping = () => this.setState({ shopPage: 'browse', cart: {} });
+  stop = (e) => e.stopPropagation();
+
+  setField = (k) => (e) => {
+    const v = e.target.value;
+    this.setState((s) => ({ form: { ...s.form, [k]: v }, errors: { ...s.errors, [k]: undefined } }));
+  };
+  validate() {
+    const f = this.state.form;
+    const er = {};
+    if (!f.name.trim()) er.name = 'Please enter your name';
+    if (!f.email.trim()) er.email = 'Please enter your email';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) er.email = "That doesn't look like a valid email";
+    if (!f.message.trim()) er.message = 'Please write a short message';
+    return er;
+  }
+  submit = (e) => {
+    e.preventDefault();
+    if (this.state.sending) return;
+    const er = this.validate();
+    if (Object.keys(er).length) { this.setState({ errors: er }); return; }
+    const f = this.state.form;
+    this.setState({ sending: true, formError: false });
+    const params = { user_name: f.name, user_email: f.email, message: f.message };
+    Promise.all([
+      emailjs.send('service_53keozf', 'template_j0jxj9v', params),
+      emailjs.send('service_53keozf', 'template_svik4jl', params),
+    ])
+      .then(() => {
+        this.setState({ modal: true, sending: false, form: { name: '', email: '', message: '' }, errors: {} });
+      })
+      .catch(() => {
+        this.setState({ sending: false, formError: true });
+        clearTimeout(this._fet);
+        this._fet = setTimeout(() => this.setState({ formError: false }), 4000);
+      });
+  };
+
+  copy = (text, name) => () => {
+    try { navigator.clipboard.writeText(text); } catch (_) {}
+    this.setState({ copied: name });
+    clearTimeout(this._ct);
+    this._ct = setTimeout(() => this.setState({ copied: null }), 1700);
+  };
+
+  dockStyle(active) {
+    const base = 'width:56px;height:48px;border-radius:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;transition:all .35s cubic-bezier(.22,1,.36,1);';
+    if (active) return base + 'background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;transform:translateY(-4px);box-shadow:0 12px 26px color-mix(in srgb, var(--a2) 48%, transparent);';
+    return base + 'background:transparent;color:var(--muted);transform:none;box-shadow:none;';
+  }
+
+  filterFinanceTx(txs, period) {
+    const today = new Date(2026, 5, 15);
+    return txs.filter(tx => {
+      const p = tx.date.split('-').map(Number);
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      const diffDays = (today - d) / 86400000;
+      if (period === 'today') return diffDays >= 0 && diffDays < 1;
+      if (period === 'week') return diffDays >= 0 && diffDays <= 7;
+      if (period === 'month') return diffDays >= 0 && diffDays <= 30;
+      return diffDays >= 0 && diffDays <= 365;
+    });
+  }
+  setFinancePeriod = (p) => () => this.setState({ financePeriod: p });
+  setFinanceTab = (t) => () => this.setState({ financeTab: t });
+  setFinanceFormType = (t) => () => this.setState((s) => ({ financeForm: { ...s.financeForm, type: t } }));
+  onFinanceAmount = (e) => { const v = e.target.value; this.setState((s) => ({ financeForm: { ...s.financeForm, amount: v } })); };
+  onFinanceLabel = (e) => { const v = e.target.value; this.setState((s) => ({ financeForm: { ...s.financeForm, label: v } })); };
+  setFinanceCat = (c) => () => this.setState((s) => ({ financeForm: { ...s.financeForm, cat: c } }));
+  removeFinanceTx = (id) => () => this.setState((s) => ({ financeTransactions: s.financeTransactions.filter(t => t.id !== id) }));
+  addFinanceTx = () => {
+    const f = this.state.financeForm;
+    const amt = parseFloat(f.amount);
+    if (!f.label.trim() || isNaN(amt) || amt <= 0) return;
+    this.setState((s) => ({
+      financeTransactions: [{ id: Date.now(), type: f.type, label: f.label.trim(), cat: f.cat, amount: amt, date: (() => { const n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); })() }, ...s.financeTransactions],
+      financeForm: { type: 'income', amount: '', label: '', cat: 'Tech' },
+      financeTab: 'overview',
+      financeAdded: true,
+    }));
+    clearTimeout(this._fat);
+    this._fat = setTimeout(() => this.setState({ financeAdded: false }), 2500);
+  };
+
+  renderVals() {
+    const s = this.state;
+    const rawProjects = [
+      { id: 'eshop', title: 'E-commerce App', blurb: 'A full-stack online store built with React and Java Spring Boot — product catalog, cart and checkout in one fast, mobile-first experience.', tags: ['React', 'Java', 'Spring Boot', 'MySQL'], detail: 'A full-stack e-commerce platform with a React frontend and a Java Spring Boot REST API. Customers browse the catalog, manage their cart and complete purchases in a few taps. Data is stored in MySQL for reliable product and order management. Designed mobile-first and easy to theme for any brand.' },
+      { id: 'coffee', title: 'Coffee Shop App', blurb: 'A React Native app for a local coffee shop — browse the menu, customise your order and collect loyalty rewards.', tags: ['React Native', 'Expo', 'JavaScript'], detail: 'A cross-platform mobile app for a neighbourhood coffee shop. Customers build their drink, save favourites, track loyalty points and reorder in two taps. Designed mobile-first with warm, friendly motion and offline-friendly menu caching.' },
+      { id: 'boat', title: 'Boat Booking App', blurb: 'A boat reservation system built with React and Java. The system updates dynamically with real-time changes, allowing users to seamlessly navigate through the entire booking workflow.', tags: ['React', 'Java', 'Spring Boot', 'Kafka'], detail: 'A boat reservation system built with React and Java. The system updates dynamically with real-time changes, allowing users to seamlessly navigate through the entire booking workflow. Experience a modern, intuitive interface that demonstrates how technology streamlines the process of reserving vessels with precision and elegance.' },
+      { id: 'finance', title: 'Business Finance Tracker', blurb: 'A business finance dashboard to track income, expenses and net profit in real time — with interactive charts, transaction logging and category breakdowns.', tags: ['React', 'Spring Boot', 'Chart.js', 'MySQL'], detail: 'A business finance tracker built with React and Java Spring Boot. Features KPI cards for total income, expenses and net profit, a form for logging transactions by category, an interactive bar chart showing monthly trends, and a donut chart for expense breakdown. Designed for freelancers and small businesses who need clarity on cash flow at a glance.' },
+      { id: 'photo', title: 'Landing Page', blurb: 'The landing page for our company. Built with HTML, CSS, and JavaScript with interactive elements that engage visitors immediately and create an immersive first impression.', tags: ['JavaScript', 'CSS', 'HTML'], detail: 'A fully responsive landing page built with HTML, CSS, and JavaScript. Features smooth animations, responsive design principles, and user-centric interactive components that create an immersive first impression. Optimised for performance with zero dependencies.' },
+    ];
+    const projects = rawProjects.map((p) => ({
+      ...p,
+      isEshop: p.id === 'eshop', isCoffee: p.id === 'coffee', isBoat: p.id === 'boat', isFinance: p.id === 'finance', isPhoto: p.id === 'photo',
+      open: () => this.openProject(p),
+    }));
+
+    const rawSocials = [
+      { name: 'GitHub', glyph: 'GH', handle: 'github.com/tsioba', href: 'https://github.com/tsioba' },
+      { name: 'Instagram', glyph: 'IG', handle: '@tsioba_', href: 'https://www.instagram.com/tsioba_/' },
+      { name: 'LinkedIn', glyph: 'in', handle: 'in/giannis-tsioympanoydis', href: 'https://www.linkedin.com/in/giannis-tsioympanoydis/' },
+      { name: 'Facebook', glyph: 'Fb', handle: '/giannis.ts10', href: 'https://www.facebook.com/giannis.ts10/' },
+    ];
+    const socials = rawSocials.map((so) => ({ ...so, copy: this.copy(so.href, so.name) }));
+
+    const ap0 = s.activeProject;
+    const eshopCatalog = [
+      { id: 'hood', name: 'Hoodie',   price: 79,  iconColor: '#f59e0b', bgGrad: 'linear-gradient(135deg,rgba(245,158,11,0.22),rgba(239,68,68,0.14))' },
+      { id: 'snkr', name: 'Sneakers', price: 149, iconColor: '#d4a574', bgGrad: 'linear-gradient(135deg,rgba(212,165,116,0.22),rgba(146,64,14,0.14))' },
+      { id: 'bag',  name: 'Backpack', price: 58,  iconColor: '#86efac', bgGrad: 'linear-gradient(135deg,rgba(134,239,172,0.22),rgba(22,163,74,0.14))' },
+      { id: 'wtch', name: 'Watch',    price: 112, iconColor: '#c4b5fd', bgGrad: 'linear-gradient(135deg,rgba(196,181,253,0.22),rgba(109,40,217,0.14))' },
+    ];
+    const coffeeCatalog = [
+      { id: 'esp',    name: 'Espresso',          price: 2.0 },
+      { id: 'cap',    name: 'Cappuccino',         price: 3.2 },
+      { id: 'fred_e', name: 'Fredo Espresso',     price: 3.6 },
+      { id: 'fred_c', name: 'Fredo Cappuccino',   price: 3.8 },
+      { id: 'moc',    name: 'Mocha',              price: 4.0 },
+    ];
+    const isCoffeeShop = !!ap0 && ap0.id === 'coffee';
+    const isShop = !!ap0 && (ap0.id === 'eshop' || ap0.id === 'coffee');
+    const catalog = ap0 && ap0.id === 'eshop' ? eshopCatalog : (isCoffeeShop ? coffeeCatalog : []);
+    const productSvgs = {
+      hood: React.createElement('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},React.createElement('path',{d:'M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z'})),
+      snkr: React.createElement('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},React.createElement('path',{d:'M2 16.5C2 14.5 4 12.5 7.5 12L12 11l3-.5C17.5 10 21 11.5 21 14v.5c0 1.5-1 2-3 2H5c-2.5 0-3-.5-3-1.5z'}),React.createElement('path',{d:'M2 17.5h20'}),React.createElement('path',{d:'M7.5 12l.3 4.5'}),React.createElement('path',{d:'M12 11l.3 5.5'})),
+      bag: React.createElement('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},React.createElement('path',{d:'M9 2a3 3 0 0 1 6 0v3H9V2z'}),React.createElement('rect',{x:'4',y:'5',width:'16',height:'15',rx:'3'}),React.createElement('rect',{x:'8',y:'11',width:'8',height:'6',rx:'1.5'}),React.createElement('path',{d:'M12 2v4'})),
+      wtch: React.createElement('svg',{width:22,height:22,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.7,strokeLinecap:'round',strokeLinejoin:'round'},React.createElement('circle',{cx:'12',cy:'13',r:'6'}),React.createElement('path',{d:'M12 10.5v2.5l1.5 1.5'}),React.createElement('path',{d:'M10 4h4'}),React.createElement('path',{d:'M10 22h4'})),
+    };
+    const shopItems = catalog.map((p) => {
+      const count = s.cart[p.id] || 0;
+      const thumbEl = isCoffeeShop ? null : React.createElement('span',{
+        style:{width:'46px',height:'46px',flexShrink:0,borderRadius:'13px',display:'flex',alignItems:'center',justifyContent:'center',background:p.bgGrad||'var(--glass)',border:'1px solid var(--glass-border)',color:p.iconColor||'var(--a3)',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 12px rgba(0,0,0,0.2)'}
+      }, productSvgs[p.id]);
+      return {
+        id: p.id, name: p.name, priceLabel: '€' + p.price.toFixed(2),
+        count, isEmpty: count === 0, hasItems: count > 0,
+        isCoffee: isCoffeeShop, isProduct: !isCoffeeShop,
+        thumbEl,
+        add: this.addItem(p.id), inc: this.addItem(p.id), dec: this.decItem(p.id),
+      };
+    });
+    const cartLines = catalog.filter((p) => s.cart[p.id]).map((p) => ({
+      name: p.name, count: s.cart[p.id], lineLabel: '€' + (p.price * s.cart[p.id]).toFixed(2),
+      inc: this.addItem(p.id), dec: this.decItem(p.id),
+    }));
+    const cartCount = catalog.reduce((n, p) => n + (s.cart[p.id] || 0), 0);
+    const cartTotal = catalog.reduce((t, p) => t + p.price * (s.cart[p.id] || 0), 0);
+    const cartCountLabel = cartCount + (cartCount === 1 ? ' item' : ' items');
+    const viewCartBase = "margin-top:4px;width:100%;padding:13px;border-radius:13px;font-family:'Manrope',sans-serif;font-weight:600;font-size:14.5px;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .3s var(--ease),box-shadow .3s var(--ease);";
+    const viewCartStyle = cartCount
+      ? viewCartBase + 'border:none;color:#fff;background:linear-gradient(110deg,var(--a1),var(--a2));box-shadow:0 12px 30px color-mix(in srgb,var(--a2) 38%,transparent);cursor:pointer;'
+      : viewCartBase + 'border:1px dashed var(--glass-border);color:var(--muted);background:var(--glass);cursor:default;';
+    const viewCartLabel = cartCount ? 'View cart · ' + cartCountLabel + ' · €' + cartTotal.toFixed(2) : 'Your cart is empty';
+
+    const rawBoats = [
+      { id: 'pos', name: 'Poseidon',    type: 'Classic Yacht',  cap: '12 guests' },
+      { id: 'hel', name: 'Helios',      type: 'Speedboat',      cap: '6 guests'  },
+      { id: 'aeg', name: 'Aegean Star', type: 'Catamaran',      cap: '10 guests' },
+      { id: 'oly', name: 'Olympus',     type: 'Sailing Boat',   cap: '8 guests'  },
+    ];
+    const boatList = rawBoats.map((b) => ({
+      ...b,
+      pick: () => this.setState({ selectedBoat: b, boatStep: 1 }),
+      style: 'display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;cursor:pointer;transition:all .25s var(--ease);border:1px solid ' + (s.selectedBoat && s.selectedBoat.id === b.id ? 'var(--a3);background:color-mix(in srgb,var(--a3) 12%,var(--glass));' : 'var(--glass-border);background:var(--glass);'),
+    }));
+
+    const boatTimeList = ['09:00', '12:00', '15:00', '18:00'];
+    const boatTimes = boatTimeList.map((t, i) => ({
+      label: t,
+      pick: () => { const d = s.dateSel; const ns = d ? this.getBaseSeats(d.year, d.month, d.day, t) : s.seats; this.setState({ selectedTime: t, boatTimeOpen: false, seats: ns }); },
+      style: 'padding:9px 16px;border-radius:11px;font-family:JetBrains Mono,monospace;font-size:12px;cursor:pointer;transition:all .3s cubic-bezier(.22,1,.36,1);' + (s.selectedTime === t ? 'border:none;background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;' : 'border:1px solid var(--glass-border);background:var(--glass);color:var(--muted);'),
+      dropStyle: 'padding:11px 14px;font-family:JetBrains Mono,monospace;font-size:13px;cursor:pointer;display:block;transition:background .15s;' + (s.selectedTime === t ? 'background:color-mix(in srgb,var(--a1) 14%,transparent);color:var(--text);font-weight:700;' : 'background:transparent;color:var(--text);') + (i < boatTimeList.length - 1 ? 'border-bottom:1px solid var(--glass-border);' : ''),
+    }));
+    const _tod = new Date(); const todayY = _tod.getFullYear(), todayM = _tod.getMonth(), todayD = _tod.getDate();
+    const calY = s.calYear, calM = s.calMonth;
+    const calFirstDow = (new Date(calY, calM, 1).getDay() + 6) % 7;
+    const calDaysInMonth = new Date(calY, calM + 1, 0).getDate();
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const canGoPrev = calY > todayY || (calY === todayY && calM > todayM);
+    const dayBase = 'display:flex;align-items:center;justify-content:center;height:28px;border-radius:8px;font-size:11px;border:none;padding:0;';
+    const calDays = [];
+    for (let i = 0; i < calFirstDow; i++) calDays.push({ dayLabel: '', pick: () => {}, style: dayBase + 'background:transparent;visibility:hidden;' });
+    for (let d = 1; d <= calDaysInMonth; d++) {
+      const past = (calY < todayY) || (calY === todayY && calM < todayM) || (calY === todayY && calM === todayM && d < todayD);
+      const isToday = calY === todayY && calM === todayM && d === todayD;
+      const isSel = s.dateSel && s.dateSel.year === calY && s.dateSel.month === calM && s.dateSel.day === d;
+      let ds;
+      if (past) ds = dayBase + 'background:transparent;opacity:.3;color:var(--muted);cursor:default;font-weight:400;';
+      else if (isSel) ds = dayBase + 'background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-weight:700;box-shadow:0 4px 10px color-mix(in srgb,var(--a2) 35%,transparent);cursor:pointer;';
+      else if (isToday) ds = dayBase + 'background:transparent;border:1.5px solid var(--a3);color:var(--a3);font-weight:600;cursor:pointer;';
+      else ds = dayBase + 'background:transparent;color:var(--text);font-weight:500;cursor:pointer;';
+      const dd = d;
+      calDays.push({ dayLabel: String(d), style: ds, pick: past ? () => {} : () => { const ns = this.getBaseSeats(calY, calM, dd, this.state.selectedTime); this.setState({ dateSel: { year: calY, month: calM, day: dd }, seats: ns }); } });
+    }
+
+    const selRow = 'display:flex;justify-content:space-between;padding:10px 12px;border-radius:11px;background:var(--glass);border:1px solid var(--glass-border);animation:rowIn .3s var(--ease) both;';
+
+    const photoGrads = [
+      'linear-gradient(135deg, oklch(0.72 0.09 60), oklch(0.45 0.06 50))',
+      'linear-gradient(135deg, oklch(0.68 0.09 230), oklch(0.4 0.07 250))',
+      'linear-gradient(135deg, oklch(0.7 0.1 140), oklch(0.42 0.07 160))',
+      'linear-gradient(135deg, oklch(0.75 0.07 20), oklch(0.5 0.08 350))',
+      'linear-gradient(135deg, oklch(0.8 0.05 90), oklch(0.55 0.05 70))',
+      'linear-gradient(135deg, oklch(0.6 0.03 270), oklch(0.35 0.03 280))',
+    ];
+    const photos = photoGrads.map((g, i) => ({
+      pick: () => this.setState({ photoSel: i }),
+      style: 'height:36px;border-radius:9px;cursor:pointer;background:' + g + ';transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;border:' + (s.photoSel === i ? '2px solid var(--a3)' : '1px solid var(--glass-border)') + ';' + (s.photoSel === i ? 'transform:scale(1.1);box-shadow:0 6px 16px rgba(0,0,0,.3);' : ''),
+    }));
+
+    const landingBase = 'cursor:pointer;border-radius:10px;transition:all .25s var(--ease);';
+    const landingNavStyle = landingBase + 'display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid ' + (s.photoSel === 0 ? 'var(--a3)' : 'var(--glass-border)') + ';background:' + (s.photoSel === 0 ? 'color-mix(in srgb,var(--a3) 10%,var(--glass-strong))' : 'var(--glass-strong)') + ';';
+    const landingHeroStyle = landingBase + 'padding:14px;border:1px solid ' + (s.photoSel === 1 ? 'var(--a3)' : 'var(--glass-border)') + ';background:linear-gradient(135deg,' + (s.photoSel === 1 ? 'color-mix(in srgb,var(--a1) 22%,transparent),color-mix(in srgb,var(--a3) 18%,transparent)' : 'color-mix(in srgb,var(--text) 6%,transparent),color-mix(in srgb,var(--text) 3%,transparent)') + ');';
+    const landingCard1Style = landingBase + 'padding:10px;border:1px solid ' + (s.photoSel === 2 ? 'var(--a3)' : 'var(--glass-border)') + ';background:' + (s.photoSel === 2 ? 'color-mix(in srgb,var(--a1) 12%,var(--glass))' : 'var(--glass)') + ';';
+    const landingCard2Style = landingBase + 'padding:10px;border:1px solid ' + (s.photoSel === 3 ? 'var(--a3)' : 'var(--glass-border)') + ';background:' + (s.photoSel === 3 ? 'color-mix(in srgb,var(--a2) 12%,var(--glass))' : 'var(--glass)') + ';';
+    const landingCard3Style = landingBase + 'padding:10px;border:1px solid ' + (s.photoSel === 4 ? 'var(--a3)' : 'var(--glass-border)') + ';background:' + (s.photoSel === 4 ? 'color-mix(in srgb,var(--a3) 12%,var(--glass))' : 'var(--glass)') + ';';
+
+    // ── Finance tracker ─────────────────────────────────────────────
+    const filteredFin = this.filterFinanceTx(s.financeTransactions, s.financePeriod);
+    const totalIncome  = filteredFin.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0);
+    const totalExpenses = filteredFin.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0);
+    const netProfit = totalIncome - totalExpenses;
+    const fpStyle = (p) => `padding:5px 12px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;cursor:pointer;border:none;font-weight:600;transition:all .2s var(--ease);${s.financePeriod === p ? 'background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;box-shadow:0 4px 12px color-mix(in srgb,var(--a2) 35%,transparent);' : 'background:var(--glass-strong);color:var(--muted);border:1px solid var(--glass-border);'}`;
+    const mLabels = ['Jan','Feb','Mar','Apr','May','Jun'];
+    const monthlyRaw = [0,1,2,3,4,5].map(mi => {
+      const txs = s.financeTransactions.filter(tx => { const d = new Date(tx.date); return d.getFullYear() === 2026 && d.getMonth() === mi; });
+      return { label: mLabels[mi], inc: txs.filter(t => t.type === 'income').reduce((a,t)=>a+t.amount,0), exp: txs.filter(t => t.type === 'expense').reduce((a,t)=>a+t.amount,0) };
+    });
+    const maxBar = Math.max(...monthlyRaw.map(m => Math.max(m.inc, m.exp)), 1);
+    const chartMonths = monthlyRaw.map(m => ({
+      label: m.label,
+      incStyle: `flex:1;border-radius:3px 3px 0 0;min-height:2px;background:linear-gradient(180deg,var(--a1),color-mix(in srgb,var(--a1) 40%,transparent));height:${Math.round(m.inc/maxBar*100)}%;`,
+      expStyle: `flex:1;border-radius:3px 3px 0 0;min-height:2px;background:linear-gradient(180deg,#ef4444,color-mix(in srgb,#ef4444 40%,transparent));height:${Math.round(m.exp/maxBar*100)}%;`,
+    }));
+    const expCatColors = { Tech:'#10b981', Software:'#22d3ee', Office:'#a78bfa', Consulting:'#f59e0b', Freelance:'#f97316', Other:'#6b7280' };
+    const expCatMap = {};
+    filteredFin.filter(t => t.type === 'expense').forEach(t => { expCatMap[t.cat] = (expCatMap[t.cat] || 0) + t.amount; });
+    const circum = 2 * Math.PI * 30;
+    let ofLen = 0;
+    const pieSVGSlices = Object.entries(expCatMap).map(([cat, amt]) => {
+      const dash = totalExpenses > 0 ? (amt / totalExpenses) * circum : 0;
+      const el = React.createElement('circle', { key: cat, cx:'40', cy:'40', r:'30', fill:'none', stroke: expCatColors[cat]||'#6b7280', strokeWidth:'14', strokeDasharray:`${dash.toFixed(1)} ${circum.toFixed(1)}`, strokeDashoffset:`${(-ofLen).toFixed(1)}` });
+      ofLen += dash;
+      return el;
+    });
+    const pieChartEl = React.createElement('svg', { viewBox:'0 0 80 80', style:{ transform:'rotate(-90deg)', display:'block', width:'100%', height:'100%' } },
+      React.createElement('circle', { cx:'40', cy:'40', r:'30', fill:'none', stroke:'rgba(255,255,255,0.06)', strokeWidth:'14' }),
+      ...pieSVGSlices
+    );
+    const pieLegend = Object.entries(expCatMap).map(([cat, amt]) => ({
+      cat, dotStyle: `width:7px;height:7px;border-radius:50%;flex:none;background:${expCatColors[cat]||'#6b7280'};`,
+      pct: totalExpenses > 0 ? Math.round(amt/totalExpenses*100) + '%' : '0%',
+      amtLbl: '€' + amt,
+    }));
+    const recentTxs = [...filteredFin]
+      .sort((a,b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5)
+      .map(tx => ({
+        ...tx,
+        amtLbl: (tx.type==='income' ? '+' : '−') + '€' + tx.amount,
+        dateLbl: tx.date.slice(5).replace('-','/'),
+        isIncome: tx.type === 'income',
+        isExpense: tx.type === 'expense',
+        amtStyle: `font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:${tx.type==='income' ? '#10b981' : '#ef4444'};white-space:nowrap;`,
+        iconEl: React.createElement('span',
+          { style: { width:'22px', height:'22px', borderRadius:'6px', background: tx.type==='income' ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)', display:'flex', alignItems:'center', justifyContent:'center', flex:'none' } },
+          React.createElement('svg', { width:'10', height:'10', viewBox:'0 0 24 24', fill:'none', stroke: tx.type==='income' ? '#10b981' : '#ef4444', strokeWidth:'3', strokeLinecap:'round', strokeLinejoin:'round' },
+            React.createElement('polyline', { points: tx.type==='income' ? '18 15 12 9 6 15' : '6 9 12 15 18 9' })
+          )
+        ),
+        remove: this.removeFinanceTx(tx.id),
+      }));
+    const finCats = ['Tech','Software','Office','Consulting','Freelance','Other'];
+    const financeCatPills = finCats.map(c => ({
+      label: c,
+      pick: this.setFinanceCat(c),
+      style: `padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;${s.financeForm.cat===c ? 'background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;border:none;' : 'background:var(--glass-strong);color:var(--muted);border:1px solid var(--glass-border);'}`,
+    }));
+    const finTypeIncomeStyle = `flex:1;padding:8px;border-radius:9px;border:none;font-family:'Manrope',sans-serif;font-weight:${s.financeForm.type==='income'?'700':'500'};font-size:13px;${s.financeForm.type==='income'?'background:linear-gradient(110deg,#10b981,#059669);color:#fff;':'background:transparent;color:var(--muted);'}cursor:pointer;transition:all .2s;`;
+    const finTypeExpenseStyle = `flex:1;padding:8px;border-radius:9px;border:none;font-family:'Manrope',sans-serif;font-weight:${s.financeForm.type==='expense'?'700':'500'};font-size:13px;${s.financeForm.type==='expense'?'background:linear-gradient(110deg,#ef4444,#dc2626);color:#fff;':'background:transparent;color:var(--muted);'}cursor:pointer;transition:all .2s;`;
+    const finNetStyle = `font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(13px,2.5vw,17px);color:${netProfit>=0?'var(--a3)':'#ef4444'};letter-spacing:-0.02em;`;
+
+    const page = s.page;
+    const ap = s.activeProject;
+    return {
+      theme: s.theme,
+      palette: s.palette,
+      isDark: s.theme === 'dark',
+      isLight: s.theme === 'light',
+      toggleTheme: this.toggleTheme,
+      cyclePalette: this.cyclePalette,
+      isHome: page === 'home',
+      isProjects: page === 'projects',
+      isContact: page === 'contact',
+      goHome: this.go('home'),
+      goProjects: this.go('projects'),
+      goContact: this.go('contact'),
+      homeStyle: this.dockStyle(page === 'home'),
+      projStyle: this.dockStyle(page === 'projects'),
+      contactStyle: this.dockStyle(page === 'contact'),
+      projects,
+      techs: ['React', 'React Native', 'Spring Boot', 'Kafka', 'JavaScript', 'CSS', 'PWA'],
+      ghHref: 'https://github.com/tsioba',
+      igHref: 'https://www.instagram.com/tsioba_/',
+      liHref: 'https://www.linkedin.com/in/giannis-tsioympanoydis/',
+      fbHref: 'https://www.facebook.com/giannis.ts10/',
+      tilt: this.tilt,
+      untilt: this.untilt,
+      heroParallax: this.heroParallax,
+      heroReset: this.heroReset,
+      activeProject: ap,
+      isShopOpen: isShop,
+      isCoffeeShop,
+      isBoatOpen: !!ap && ap.id === 'boat',
+      isPhotoOpen: !!ap && ap.id === 'photo',
+      isFinanceOpen: !!ap && ap.id === 'finance',
+      closeProject: this.closeProject,
+      stop: this.stop,
+      projOverlayAnim: s.projClosing ? 'overlayOut .3s var(--ease) forwards' : 'overlayIn .3s var(--ease)',
+      projModalAnim: s.projClosing ? 'modalOut .32s var(--ease) forwards' : 'modalIn .45s var(--ease)',
+      shopItems,
+      openCart: this.openCart,
+      viewCartStyle,
+      viewCartLabel,
+      shopBrowse: s.shopPage === 'browse',
+      shopCartPage: s.shopPage === 'cart',
+      shopDonePage: s.shopPage === 'done',
+      goBackToBrowse: this.goBackToBrowse,
+      cartLines,
+      cartTotalLabel: '€' + cartTotal.toFixed(2),
+      cartCountLabel,
+      checkout: this.checkout,
+      continueShopping: this.continueShopping,
+      doneSummary: cartCountLabel + ' · €' + cartTotal.toFixed(2),
+      boatList,
+      boatTimes,
+      boatTimeOpen: !!ap && ap.id === 'boat' && s.boatStep === 1 && s.boatTimeOpen,
+      toggleBoatTime: this.toggleBoatTime,
+      calDays,
+      calMonthLabel: monthNames[calM] + ' ' + calY,
+      prevCalMonth: this.prevCalMonth,
+      nextCalMonth: this.nextCalMonth,
+      calPrevStyle: 'width:24px;height:24px;border-radius:7px;border:1px solid var(--glass-border);background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);' + (canGoPrev ? 'cursor:pointer;' : 'opacity:.3;pointer-events:none;cursor:default;'),
+      calNextStyle: 'width:24px;height:24px;border-radius:7px;border:1px solid var(--glass-border);background:var(--glass);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--muted);cursor:pointer;',
+      boatStep0: !!ap && ap.id === 'boat' && s.boatStep === 0,
+      boatStep1: !!ap && ap.id === 'boat' && s.boatStep === 1,
+      boatStep2: !!ap && ap.id === 'boat' && s.boatStep === 2,
+      boatStep3: !!ap && ap.id === 'boat' && s.boatStep === 3,
+      goBoatStep0: () => this.setState({ boatStep: 0 }),
+      goBoatStep1: () => this.setState({ boatStep: 1 }),
+      goBoatStep2: () => this.setState({ boatStep: 2 }),
+      confirmBoat: () => this.setState({ boatStep: 3, booked: true }),
+      resetBoat: () => { const n = new Date(); const ry = n.getFullYear(), rm = n.getMonth(), rd = n.getDate(); this.setState({ boatStep: 0, selectedBoat: null, selectedTime: '09:00', booked: false, dateSel: { year: ry, month: rm, day: rd }, calYear: ry, calMonth: rm, seats: this.getBaseSeats(ry, rm, rd, '09:00') }); },
+      selectedBoatName: s.selectedBoat ? s.selectedBoat.name : '',
+      selectedBoatType: s.selectedBoat ? s.selectedBoat.type : '',
+      selectedBoatCap: s.selectedBoat ? s.selectedBoat.cap : '',
+      selectedDateLabel: (() => { const d = s.dateSel; if (!d) return '—'; const dn = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d.year, d.month, d.day).getDay()]; const mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.month]; return dn + ' ' + d.day + ' ' + mn; })(),
+      selectedTime: s.selectedTime || '09:00',
+      seats: s.seats,
+      seatsBarStyle: 'height:100%;width:' + Math.round((s.seats / 14) * 100) + '%;background:linear-gradient(90deg,var(--a1),var(--a3));border-radius:5px;transition:width .6s cubic-bezier(.22,1,.36,1);',
+      selRow,
+      photos,
+      bigPhotoStyle: 'height:150px;border-radius:14px;border:1px solid var(--glass-border);background:' + photoGrads[s.photoSel] + ';transition:background .45s cubic-bezier(.22,1,.36,1);',
+      landingNavStyle,
+      landingHeroStyle,
+      landingCard1Style,
+      landingCard2Style,
+      landingCard3Style,
+      landingPickNav: () => this.setState({ photoSel: 0 }),
+      landingPickHero: () => this.setState({ photoSel: 1 }),
+      landingPick1: () => this.setState({ photoSel: 2 }),
+      landingPick2: () => this.setState({ photoSel: 3 }),
+      landingPick3: () => this.setState({ photoSel: 4 }),
+      form: s.form,
+      errors: s.errors,
+      onName: this.setField('name'),
+      onEmail: this.setField('email'),
+      onMessage: this.setField('message'),
+      submit: this.submit,
+      sendBtnLabel: s.sending ? 'Sending…' : 'Send Message',
+      formError: s.formError,
+      modal: s.modal,
+      okOverlayAnim: s.modalClosing ? 'overlayOut .3s var(--ease) forwards' : 'overlayIn .3s var(--ease)',
+      okModalAnim: s.modalClosing ? 'modalOut .3s var(--ease) forwards' : 'modalIn .45s var(--ease)',
+      closeModal: this.closeModal,
+      copied: s.copied,
+      copiedMsg: s.copied ? s.copied + ' link copied to clipboard' : '',
+      finPeriodTodayStyle: fpStyle('today'),
+      finPeriodWeekStyle: fpStyle('week'),
+      finPeriodMonthStyle: fpStyle('month'),
+      finPeriodYearStyle: fpStyle('year'),
+      setFinPeriodToday: this.setFinancePeriod('today'),
+      setFinPeriodWeek: this.setFinancePeriod('week'),
+      setFinPeriodMonth: this.setFinancePeriod('month'),
+      setFinPeriodYear: this.setFinancePeriod('year'),
+      finTabOverview: s.financeTab === 'overview',
+      finTabAdd: s.financeTab === 'add',
+      openFinTabOverview: this.setFinanceTab('overview'),
+      openFinTabAdd: this.setFinanceTab('add'),
+      finIncomeLbl: '€' + totalIncome.toLocaleString(),
+      finExpensesLbl: '€' + totalExpenses.toLocaleString(),
+      finNetLbl: (netProfit >= 0 ? '+€' : '−€') + Math.abs(netProfit).toLocaleString(),
+      finNetStyle,
+      chartMonths,
+      recentTxs,
+      pieChartEl,
+      pieLegend,
+      financeCatPills,
+      financeForm: s.financeForm,
+      onFinanceAmount: this.onFinanceAmount,
+      onFinanceLabel: this.onFinanceLabel,
+      setFinTypeIncome: this.setFinanceFormType('income'),
+      setFinTypeExpense: this.setFinanceFormType('expense'),
+      finTypeIncomeStyle,
+      finTypeExpenseStyle,
+      addFinanceTx: this.addFinanceTx,
+      financeAdded: s.financeAdded,
+    };
+  }
+}
+
+</script>
+
+</body>
+</html>
+

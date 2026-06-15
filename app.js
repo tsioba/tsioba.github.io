@@ -61,6 +61,11 @@ class Component extends DCLogic {
   };
 
   componentDidMount() {
+    if (history.scrollRestoration) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    try { document.querySelector('[data-app]').scrollTop = 0; } catch (_) {}
     this.readAccent();
     this.initParticles();
     this._key = (e) => { if (e.key !== 'Escape') return; if (this.state.activeProject) this.closeProject(); else if (this.state.modal) this.closeModal(); };
@@ -84,7 +89,7 @@ class Component extends DCLogic {
       this._loadT2 = setTimeout(() => {
         document.body.classList.add('home-loaded');
         this.setState({ loading: false });
-      }, 650);
+      }, 750);
     }, 2000);
   }
   componentDidUpdate(prevProps, prevState) {
@@ -617,7 +622,7 @@ class Component extends DCLogic {
     return {
       theme: s.theme,
       loading: s.loading,
-      loadingOverlayAnim: s.loadingClosing ? 'loadOut .65s cubic-bezier(.45,0,1,1) forwards' : 'none',
+      loadingOverlayAnim: s.loadingClosing ? 'loadOut .75s cubic-bezier(.7,0,.3,1) forwards' : 'none',
       palette: s.palette,
       isDark: s.theme === 'dark',
       isLight: s.theme === 'light',

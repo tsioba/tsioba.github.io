@@ -136,10 +136,15 @@
 
         <section style="padding:clamp(20px,3vh,40px) clamp(16px,5vw,40px) clamp(100px,12vh,140px);display:flex;justify-content:center;">
           <div style="max-width:880px;width:100%;animation:fadeUp .8s var(--ease) .2s both;">
-            <div style="position:relative;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);border:1px solid var(--glass-border);border-radius:30px;padding:clamp(30px,5vw,60px);box-shadow:0 22px 70px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.18);animation:floaty 8s ease-in-out infinite;">
-              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--a3);margin-bottom:20px;">Philosophy</div>
+            <div style="position:relative;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(170%);backdrop-filter:blur(24px) saturate(170%);border:1px solid var(--glass-border);border-radius:30px;padding:clamp(20px,4vw,50px);box-shadow:0 22px 70px rgba(0,0,0,0.32),inset 0 1px 0 rgba(255,255,255,0.18);animation:floaty 8s ease-in-out infinite;display:flex;align-items:center;gap:clamp(14px,3vw,36px);">
+              <video autoplay loop muted playsinline style="flex-shrink:0;width:clamp(100px,14vw,155px);mix-blend-mode:screen;pointer-events:none;display:block;">
+                <source src="assets/memoji.mp4" type="video/mp4">
+              </video>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.3em;text-transform:uppercase;color:var(--a3);margin-bottom:20px;">Philosophy</div>
+                <p style="font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(18px,2.6vw,30px);line-height:1.45;letter-spacing:-0.01em;">Development is the art of bringing abstract ideas to life &mdash; of creating tangible solutions from simple lines of code. It is a journey where patience, perseverance and curiosity are the guides, and where each bug overcome is a victory over oneself.</p>
+              </div>
               <span style="position:absolute;top:18px;right:34px;font-family:'Space Grotesk',sans-serif;font-size:120px;line-height:1;background:linear-gradient(135deg,var(--a1),var(--a3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;opacity:.4;pointer-events:none;">&rdquo;</span>
-              <p style="font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:clamp(21px,3vw,33px);line-height:1.45;letter-spacing:-0.01em;">Development is the art of bringing abstract ideas to life &mdash; of creating tangible solutions from simple lines of code. It is a journey where patience, perseverance and curiosity are the guides, and where each bug overcome is a victory over oneself.</p>
             </div>
           </div>
         </section>

@@ -49,6 +49,13 @@ class Component extends DCLogic {
       { id: 18, type: 'expense', label: 'Laptop Repair',       cat: 'Office',     amount: 180,  date: '2026-01-20' },
       { id: 19, type: 'income',  label: 'Yearly Retainer',     cat: 'Consulting', amount: 4800, date: '2026-01-05' },
     ],
+    chatInput: '',
+    chatTyping: false,
+    chatMessages: [
+      { id: 1, from: 'them', text: "Hey! Just checked your portfolio — love the work! 🔥", time: '14:32' },
+      { id: 2, from: 'me',   text: "Thank you! Really glad you liked it 😊", time: '14:33' },
+      { id: 3, from: 'them', text: "Would love to collaborate on something. Are you available?", time: '14:33' },
+    ],
   };
 
   componentDidMount() {
@@ -81,6 +88,8 @@ class Component extends DCLogic {
     clearTimeout(this._mc);
     clearTimeout(this._fet);
     clearTimeout(this._fat);
+    clearTimeout(this._chatT);
+    clearTimeout(this._chatRT);
     clearInterval(this._boatInt);
   }
 
@@ -320,6 +329,54 @@ class Component extends DCLogic {
     this._fat = setTimeout(() => this.setState({ financeAdded: false }), 2500);
   };
 
+  getChatReply = (msg) => {
+    const m = msg.toLowerCase();
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    if (/\b(hi|hello|hey|heya|sup|hiya)\b/.test(m))
+      return pick(["Hey! 👋 Loving the portfolio!", "Hey! Great to connect 😊", "Hi! Your work is seriously impressive!"]);
+    if (/collab|collaborate|work together|team up|join forces/.test(m))
+      return pick(["Absolutely, let's make something awesome! 🔥", "100% in — what kind of project are you thinking?", "Yes! Send me the details and let's get started 💪", "Love it — I'm ready when you are 🚀"]);
+    if (/\b(hire|job|freelance|rate|price|cost|budget|pay|fee)\b/.test(m))
+      return pick(["Let's discuss — what's the scope of the project?", "Happy to talk rates! DM me the project details 📩", "Sounds interesting — what's the timeline and stack?"]);
+    if (/\b(react|spring|java|websocket|mysql|kafka|node|api|backend|frontend|fullstack|code|tech|stack|typescript|docker)\b/.test(m))
+      return pick(["Nice stack! 👌 React + Spring Boot is seriously solid.", "Love the tech choices — very production-ready!", "That's exactly the kind of setup I enjoy working with!"]);
+    if (/\b(meet|call|zoom|talk|schedule|available|free|busy|when|sync)\b/.test(m))
+      return pick(["I'm flexible! Drop your availability and we'll sync 📅", "Let's set something up — when works for you?", "Always down for a quick call — just say when ☎️"]);
+    if (/\b(project|portfolio|app|site|build|built|made|created|demo)\b/.test(m))
+      return pick(["The demos are super clean — great attention to detail! 🎯", "Love how interactive everything is 🔥", "The projects show real production thinking — impressed!"]);
+    if (/\b(nice|great|love|awesome|cool|sick|fire|amazing|incredible|good|wow|impressive)\b/.test(m))
+      return pick(["Thanks, that means a lot! 🙏", "Appreciate it! Took a lot of iterations to get right 😄", "That honestly made my day — thank you ✨"]);
+    if (/\?/.test(m))
+      return pick(["Good question! 🤔 Tell me more about what you have in mind.", "Hmm, depends on the context — what are you thinking?", "Interesting! What's the use case?", "Great point — let's dig into it 👀"]);
+    return pick(["That sounds great! 🚀", "Absolutely, let's do it! 💪", "Love the energy! 🔥", "Let's make it happen 🎉", "Noted — what's the next step?", "Can't wait to see where this goes ⚡"]);
+  };
+
+  scrollChatToBottom = () => {
+    requestAnimationFrame(() => {
+      const el = document.querySelector('[data-chat-msgs]');
+      if (el) el.scrollTop = el.scrollHeight;
+    });
+  };
+
+  onChatInput = (e) => this.setState({ chatInput: e.target.value });
+  onChatKeyDown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChatMsg(); } };
+  sendChatMsg = () => {
+    const text = (this.state.chatInput || '').trim();
+    if (!text) return;
+    const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const msg = { id: Date.now(), from: 'me', text, time: t };
+    this.setState({ chatInput: '', chatMessages: [...this.state.chatMessages, msg] });
+    this.scrollChatToBottom();
+    clearTimeout(this._chatT); clearTimeout(this._chatRT);
+    this._chatT = setTimeout(() => { this.setState({ chatTyping: true }); this.scrollChatToBottom(); }, 500);
+    this._chatRT = setTimeout(() => {
+      const t2 = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const reply = { id: Date.now() + 1, from: 'them', text: this.getChatReply(text), time: t2 };
+      this.setState({ chatTyping: false, chatMessages: [...this.state.chatMessages, reply] });
+      this.scrollChatToBottom();
+    }, 1400 + Math.random() * 800);
+  };
+
   renderVals() {
     const s = this.state;
     const rawProjects = [
@@ -328,10 +385,11 @@ class Component extends DCLogic {
       { id: 'boat', title: 'Boat Booking App', blurb: 'A boat reservation system built with React and Java. The system updates dynamically with real-time changes, allowing users to seamlessly navigate through the entire booking workflow.', tags: ['React', 'Java', 'Spring Boot', 'Kafka'], detail: 'A boat reservation system built with React and Java. The system updates dynamically with real-time changes, allowing users to seamlessly navigate through the entire booking workflow. Experience a modern, intuitive interface that demonstrates how technology streamlines the process of reserving vessels with precision and elegance.' },
       { id: 'finance', title: 'Business Finance Tracker', blurb: 'A business finance dashboard to track income, expenses and net profit in real time — with interactive charts, transaction logging and category breakdowns.', tags: ['React', 'Spring Boot', 'Chart.js', 'MySQL'], detail: 'A business finance tracker built with React and Java Spring Boot. Features KPI cards for total income, expenses and net profit, a form for logging transactions by category, an interactive bar chart showing monthly trends, and a donut chart for expense breakdown. Designed for freelancers and small businesses who need clarity on cash flow at a glance.' },
       { id: 'photo', title: 'Landing Page', blurb: 'The landing page for our company. Built with HTML, CSS, and JavaScript with interactive elements that engage visitors immediately and create an immersive first impression.', tags: ['JavaScript', 'CSS', 'HTML'], detail: 'A fully responsive landing page built with HTML, CSS, and JavaScript. Features smooth animations, responsive design principles, and user-centric interactive components that create an immersive first impression. Optimised for performance with zero dependencies.' },
+      { id: 'chat', title: 'Real-Time Chat App', blurb: 'A full-stack messaging app with real-time WebSocket communication — private rooms, live typing indicators and instant message delivery.', tags: ['React', 'Spring Boot', 'WebSocket', 'MySQL'], detail: 'A real-time chat application built with React and Java Spring Boot. Uses WebSocket (STOMP over SockJS) for instant message delivery across private and group rooms. Features live typing indicators, online presence badges, message timestamps and persistent conversation history backed by MySQL. Designed for speed and clarity.' },
     ];
     const projects = rawProjects.map((p) => ({
       ...p,
-      isEshop: p.id === 'eshop', isCoffee: p.id === 'coffee', isBoat: p.id === 'boat', isFinance: p.id === 'finance', isPhoto: p.id === 'photo',
+      isEshop: p.id === 'eshop', isCoffee: p.id === 'coffee', isBoat: p.id === 'boat', isFinance: p.id === 'finance', isPhoto: p.id === 'photo', isChat: p.id === 'chat',
       open: () => this.openProject(p),
     }));
 
@@ -560,6 +618,22 @@ class Component extends DCLogic {
       isBoatOpen: !!ap && ap.id === 'boat',
       isPhotoOpen: !!ap && ap.id === 'photo',
       isFinanceOpen: !!ap && ap.id === 'finance',
+      isChatOpen: !!ap && ap.id === 'chat',
+      chatMessages: s.chatMessages.map((m) => ({
+        ...m,
+        wrapStyle: m.from === 'me' ? 'display:flex;flex-direction:column;align-items:flex-end;' : 'display:flex;flex-direction:column;align-items:flex-start;',
+        bubbleStyle: m.from === 'me'
+          ? 'padding:8px 12px;border-radius:14px 14px 3px 14px;background:linear-gradient(110deg,var(--a1),var(--a2));color:#fff;font-size:13px;line-height:1.5;max-width:80%;word-break:break-word;'
+          : 'padding:8px 12px;border-radius:14px 14px 14px 3px;background:var(--glass-strong);border:1px solid var(--glass-border);color:var(--text);font-size:13px;line-height:1.5;max-width:80%;word-break:break-word;',
+        timeStyle: m.from === 'me'
+          ? "font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;text-align:right;"
+          : "font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;",
+      })),
+      chatTyping: s.chatTyping,
+      chatInput: s.chatInput,
+      onChatInput: this.onChatInput,
+      onChatKeyDown: this.onChatKeyDown,
+      sendChatMsg: this.sendChatMsg,
       closeProject: this.closeProject,
       stop: this.stop,
       projOverlayAnim: s.projClosing ? 'overlayOut .3s var(--ease) forwards' : 'overlayIn .3s var(--ease)',

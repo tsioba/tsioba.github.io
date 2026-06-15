@@ -3,6 +3,8 @@ class Component extends DCLogic {
     theme: this.props.theme || 'dark',
     palette: this.props.palette || 'aurora',
     page: this.props.startPage || 'home',
+    loading: true,
+    loadingClosing: false,
     activeProject: null,
     form: { name: '', email: '', message: '' },
     errors: {},
@@ -77,6 +79,13 @@ class Component extends DCLogic {
     };
     window.addEventListener('touchstart', this._touchStart, { passive: true });
     window.addEventListener('touchend', this._touchEnd, { passive: true });
+    this._loadT = setTimeout(() => {
+      this.setState({ loadingClosing: true });
+      this._loadT2 = setTimeout(() => {
+        document.body.classList.add('home-loaded');
+        this.setState({ loading: false });
+      }, 650);
+    }, 2000);
   }
   componentDidUpdate(prevProps, prevState) {
     if (prevState.palette !== this.state.palette) this.readAccent();
@@ -104,6 +113,9 @@ class Component extends DCLogic {
     clearTimeout(this._mc);
     clearTimeout(this._fet);
     clearTimeout(this._fat);
+    clearTimeout(this._loadT);
+    clearTimeout(this._loadT2);
+    document.body.classList.remove('home-loaded');
     clearTimeout(this._chatT);
     clearTimeout(this._chatRT);
     clearInterval(this._boatInt);
@@ -604,6 +616,8 @@ class Component extends DCLogic {
     const ap = s.activeProject;
     return {
       theme: s.theme,
+      loading: s.loading,
+      loadingOverlayAnim: s.loadingClosing ? 'loadOut .65s cubic-bezier(.45,0,1,1) forwards' : 'none',
       palette: s.palette,
       isDark: s.theme === 'dark',
       isLight: s.theme === 'light',

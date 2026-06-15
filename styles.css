@@ -515,9 +515,18 @@ body{margin:0;background:#08120f}
 @keyframes sheetIn{from{opacity:0;transform:translateY(46px) scale(.97)}to{opacity:1;transform:none}}
 @keyframes sheetOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(46px) scale(.97)}}
 @keyframes popIn{from{opacity:0;transform:scale(.6)}60%{transform:scale(1.12)}to{opacity:1;transform:scale(1)}}
+@keyframes loadOut{0%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+@keyframes loadBar{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideRight{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
 @keyframes coffeeHl{0%{background:color-mix(in srgb,var(--a1) 18%,var(--glass));border-color:var(--a3);}22%{background:color-mix(in srgb,var(--a1) 18%,var(--glass));border-color:var(--a3);}36%,100%{background:var(--glass);border-color:var(--glass-border);}}
+#hero-giannis{animation:textShift 7s linear infinite}
+.home-loaded #hero-subtitle{animation:fadeUp .6s var(--ease) .05s both}
+.home-loaded #hero-im{animation:fadeUp .55s var(--ease) .2s both}
+.home-loaded #hero-giannis{animation:textShift 7s linear infinite,fadeUp .65s var(--ease) .36s both}
+.home-loaded #hero-tagline{animation:fadeUp .6s var(--ease) .54s both}
+.home-loaded #hero-btns{animation:fadeUp .55s var(--ease) .7s both}
 [data-app] *::-webkit-scrollbar{width:4px}
 [data-app] *::-webkit-scrollbar-track{background:transparent}
 [data-app] *::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.11);border-radius:10px}

@@ -494,6 +494,7 @@ body{margin:0;background:#08120f}
 [data-app][data-palette="champagne"]{--a1:#e6c98f;--a2:#d6b27a;--a3:#f3e3bd;--bg:#0b0e16;}
 [data-app][data-palette="crimson"]{--a1:#fb7185;--a2:#f43f5e;--a3:#e11d48;--bg:#150a0e;}
 [data-app][data-theme="light"]{--text:#15151f;--muted:rgba(21,21,31,0.62);--glass:rgba(255,255,255,0.5);--glass-strong:rgba(255,255,255,0.7);--glass-border:rgba(255,255,255,0.88);--bg:#eceae3;}
+[data-app] input,[data-app] textarea{font-size:16px !important;}
 [data-app] ::placeholder{color:var(--muted);opacity:.7}
 [data-app] ::selection{background:var(--a1);color:#fff}
 @keyframes orbA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,-40px) scale(1.12)}}

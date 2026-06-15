@@ -63,6 +63,20 @@ class Component extends DCLogic {
     this.initParticles();
     this._key = (e) => { if (e.key !== 'Escape') return; if (this.state.activeProject) this.closeProject(); else if (this.state.modal) this.closeModal(); };
     window.addEventListener('keydown', this._key);
+    let _tx = 0, _ty = 0;
+    this._touchStart = (e) => { _tx = e.touches[0].clientX; _ty = e.touches[0].clientY; };
+    this._touchEnd = (e) => {
+      const dx = e.changedTouches[0].clientX - _tx;
+      const dy = e.changedTouches[0].clientY - _ty;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy)) return;
+      if (this.state.activeProject || this.state.modal) return;
+      const pages = ['home', 'projects', 'contact'];
+      const idx = pages.indexOf(this.state.page);
+      if (dx < 0 && idx < pages.length - 1) this.go(pages[idx + 1])();
+      else if (dx > 0 && idx > 0) this.go(pages[idx - 1])();
+    };
+    window.addEventListener('touchstart', this._touchStart, { passive: true });
+    window.addEventListener('touchend', this._touchEnd, { passive: true });
   }
   componentDidUpdate(prevProps, prevState) {
     if (prevState.palette !== this.state.palette) this.readAccent();
@@ -83,6 +97,8 @@ class Component extends DCLogic {
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._resize) window.removeEventListener('resize', this._resize);
     if (this._key) window.removeEventListener('keydown', this._key);
+    if (this._touchStart) window.removeEventListener('touchstart', this._touchStart);
+    if (this._touchEnd) window.removeEventListener('touchend', this._touchEnd);
     clearTimeout(this._ct);
     clearTimeout(this._pc);
     clearTimeout(this._mc);
